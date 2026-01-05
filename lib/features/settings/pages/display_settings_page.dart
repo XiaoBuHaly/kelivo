@@ -1155,6 +1155,20 @@ class BehaviorStartupSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme; final l10n = AppLocalizations.of(context)!; final sp = context.watch<SettingsProvider>();
+    final isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+
+    String _desktopSendModeLabel(DesktopSendKeyMode mode) {
+      switch (mode) {
+        case DesktopSendKeyMode.ctrlEnterToSend:
+          return l10n.displaySettingsPageSendKeyModeCtrlEnterToSend;
+        case DesktopSendKeyMode.cmdEnterToSend:
+          return l10n.displaySettingsPageSendKeyModeCmdEnterToSend;
+        case DesktopSendKeyMode.enterToSend:
+        default:
+          return l10n.displaySettingsPageSendKeyModeEnterToSend;
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: Tooltip(message: l10n.settingsPageBackButton, child: _TactileIconButton(icon: Lucide.ArrowLeft, color: cs.onSurface, size: 22, onTap: () => Navigator.of(context).maybePop())),
@@ -1183,6 +1197,52 @@ class BehaviorStartupSettingsPage extends StatelessWidget {
           _iosSwitchRow(context, icon: Lucide.MessageCirclePlus, label: l10n.displaySettingsPageNewChatOnLaunchTitle, value: sp.newChatOnLaunch, onChanged: (v) => context.read<SettingsProvider>().setNewChatOnLaunch(v)),
           _iosDivider(context),
           _iosSwitchRow(context, icon: Lucide.CornerDownLeft, label: l10n.displaySettingsPageEnterToSendTitle, value: sp.enterToSendOnMobile, onChanged: (v) => context.read<SettingsProvider>().setEnterToSendOnMobile(v)),
+          if (isDesktop) ...[
+            _iosDivider(context),
+            _iosNavRow(
+              context,
+              icon: Lucide.Keyboard,
+              label: l10n.displaySettingsPageSendKeyModeTitle,
+              detailText: _desktopSendModeLabel(sp.desktopSendKeyMode),
+              onTap: () async {
+                final choice = await showModalBottomSheet<String>(
+                  context: context,
+                  backgroundColor: cs.surface,
+                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+                  builder: (ctx) => SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _sheetOption(ctx, label: l10n.displaySettingsPageSendKeyModeEnterToSend, onTap: () => Navigator.of(ctx).pop('enter')),
+                          _sheetDividerNoIcon(ctx),
+                          _sheetOption(ctx, label: l10n.displaySettingsPageSendKeyModeCtrlEnterToSend, onTap: () => Navigator.of(ctx).pop('ctrl_enter')),
+                          if (Platform.isMacOS) ...[
+                            _sheetDividerNoIcon(ctx),
+                            _sheetOption(ctx, label: l10n.displaySettingsPageSendKeyModeCmdEnterToSend, onTap: () => Navigator.of(ctx).pop('cmd_enter')),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+                if (choice == null) return;
+                final p = context.read<SettingsProvider>();
+                switch (choice) {
+                  case 'ctrl_enter':
+                    await p.setDesktopSendKeyMode(DesktopSendKeyMode.ctrlEnterToSend);
+                    break;
+                  case 'cmd_enter':
+                    await p.setDesktopSendKeyMode(DesktopSendKeyMode.cmdEnterToSend);
+                    break;
+                  case 'enter':
+                  default:
+                    await p.setDesktopSendKeyMode(DesktopSendKeyMode.enterToSend);
+                }
+              },
+            ),
+          ],
         ]),
       ]),
     );

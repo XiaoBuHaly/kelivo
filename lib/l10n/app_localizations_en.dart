@@ -2967,6 +2967,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get displaySettingsPageEnterToSendTitle => 'Enter Key to Send';
 
   @override
+  String get displaySettingsPageSendKeyModeTitle => 'Send shortcut (Desktop)';
+
+  @override
+  String get displaySettingsPageSendKeyModeEnterToSend =>
+      'Enter to send (Shift+Enter newline)';
+
+  @override
+  String get displaySettingsPageSendKeyModeCtrlEnterToSend =>
+      'Ctrl+Enter to send (Enter/Shift+Enter newline)';
+
+  @override
+  String get displaySettingsPageSendKeyModeCmdEnterToSend =>
+      'Cmd+Enter to send (Enter/Shift+Enter newline)';
+
+  @override
   String get displaySettingsPageAutoSwitchTopicsTitle =>
       'Auto switch to Topics';
 

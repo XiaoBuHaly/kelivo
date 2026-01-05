@@ -413,7 +413,9 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     final isArrow = key == LogicalKeyboardKey.arrowLeft || key == LogicalKeyboardKey.arrowRight;
     final isPasteV = key == LogicalKeyboardKey.keyV;
 
-    // Enter handling on tablet/desktop: Enter=send, Shift+Enter=newline
+    // Enter handling on tablet/desktop:
+    // - Shift+Enter = newline (always)
+    // - Mode configurable: Enter to send OR Ctrl/Cmd+Enter to send
     if (isEnter && isTabletOrDesktop) {
       if (!isDown) return KeyEventResult.handled; // ignore key up
       // Respect IME composition (e.g., Chinese Pinyin). If composing, let IME handle Enter.
@@ -422,10 +424,31 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
       if (composingActive) return KeyEventResult.ignored;
       final keys = RawKeyboard.instance.keysPressed;
       final shift = keys.contains(LogicalKeyboardKey.shiftLeft) || keys.contains(LogicalKeyboardKey.shiftRight);
+      final ctrl = keys.contains(LogicalKeyboardKey.controlLeft) || keys.contains(LogicalKeyboardKey.controlRight);
+      final meta = keys.contains(LogicalKeyboardKey.metaLeft) || keys.contains(LogicalKeyboardKey.metaRight);
       if (shift) {
         _insertNewlineAtCursor();
       } else {
-        _handleSend();
+        final sp = Provider.of<SettingsProvider>(node.context!, listen: false);
+        switch (sp.desktopSendKeyMode) {
+          case DesktopSendKeyMode.enterToSend:
+            _handleSend();
+            break;
+          case DesktopSendKeyMode.ctrlEnterToSend:
+            if (ctrl) {
+              _handleSend();
+            } else {
+              _insertNewlineAtCursor();
+            }
+            break;
+          case DesktopSendKeyMode.cmdEnterToSend:
+            if (meta) {
+              _handleSend();
+            } else {
+              _insertNewlineAtCursor();
+            }
+            break;
+        }
       }
       return KeyEventResult.handled;
     }

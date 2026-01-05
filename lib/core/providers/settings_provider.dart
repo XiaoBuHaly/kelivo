@@ -20,6 +20,9 @@ import '../../utils/avatar_cache.dart';
 // Desktop: topic list position
 enum DesktopTopicPosition { left, right }
 
+// Desktop/tablet hardware keyboard: how to send messages
+enum DesktopSendKeyMode { enterToSend, ctrlEnterToSend, cmdEnterToSend }
+
 class SettingsProvider extends ChangeNotifier {
   static const String _providersOrderKey = 'providers_order_v1';
   static const String _themeModeKey = 'theme_mode_v1';
@@ -58,6 +61,7 @@ class SettingsProvider extends ChangeNotifier {
   static const String _displayNewChatOnLaunchKey = 'display_new_chat_on_launch_v1';
   static const String _displayNewChatAfterDeleteKey = 'display_new_chat_after_delete_v1';
   static const String _displayEnterToSendOnMobileKey = 'display_enter_to_send_on_mobile_v1';
+  static const String _displayDesktopSendKeyModeKey = 'display_desktop_send_key_mode_v1';
   static const String _displayChatFontScaleKey = 'display_chat_font_scale_v1';
   static const String _displayAutoScrollEnabledKey = 'display_auto_scroll_enabled_v1';
   static const String _displayAutoScrollIdleSecondsKey = 'display_auto_scroll_idle_seconds_v1';
@@ -359,6 +363,26 @@ class SettingsProvider extends ChangeNotifier {
     } else {
       _enterToSendOnMobile = enterToSendPref;
     }
+
+    // Desktop send key mode: default is Enter to send (keep current behavior)
+    final desktopSendKeyModePref = prefs.getString(_displayDesktopSendKeyModeKey);
+    if (desktopSendKeyModePref == null || desktopSendKeyModePref.trim().isEmpty) {
+      _desktopSendKeyMode = DesktopSendKeyMode.enterToSend;
+      await prefs.setString(_displayDesktopSendKeyModeKey, 'enter');
+    } else {
+      switch (desktopSendKeyModePref) {
+        case 'ctrl_enter':
+          _desktopSendKeyMode = DesktopSendKeyMode.ctrlEnterToSend;
+          break;
+        case 'cmd_enter':
+          _desktopSendKeyMode = DesktopSendKeyMode.cmdEnterToSend;
+          break;
+        case 'enter':
+        default:
+          _desktopSendKeyMode = DesktopSendKeyMode.enterToSend;
+      }
+    }
+
     _chatFontScale = prefs.getDouble(_displayChatFontScaleKey) ?? 1.0;
     _autoScrollEnabled = prefs.getBool(_displayAutoScrollEnabledKey) ?? true;
     _autoScrollIdleSeconds = prefs.getInt(_displayAutoScrollIdleSecondsKey) ?? 8;
@@ -1753,6 +1777,22 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_displayEnterToSendOnMobileKey, v);
+  }
+
+  // Display: desktop send key mode
+  DesktopSendKeyMode _desktopSendKeyMode = DesktopSendKeyMode.enterToSend;
+  DesktopSendKeyMode get desktopSendKeyMode => _desktopSendKeyMode;
+  Future<void> setDesktopSendKeyMode(DesktopSendKeyMode mode) async {
+    if (_desktopSendKeyMode == mode) return;
+    _desktopSendKeyMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    final v = switch (mode) {
+      DesktopSendKeyMode.ctrlEnterToSend => 'ctrl_enter',
+      DesktopSendKeyMode.cmdEnterToSend => 'cmd_enter',
+      DesktopSendKeyMode.enterToSend => 'enter',
+    };
+    await prefs.setString(_displayDesktopSendKeyModeKey, v);
   }
 
   // Display: chat font scale (0.5 - 1.5, default 1.0)

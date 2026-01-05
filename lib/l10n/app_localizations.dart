@@ -5576,6 +5576,30 @@ abstract class AppLocalizations {
   /// **'Enter Key to Send'**
   String get displaySettingsPageEnterToSendTitle;
 
+  /// No description provided for @displaySettingsPageSendKeyModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send shortcut (Desktop)'**
+  String get displaySettingsPageSendKeyModeTitle;
+
+  /// No description provided for @displaySettingsPageSendKeyModeEnterToSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter to send (Shift+Enter newline)'**
+  String get displaySettingsPageSendKeyModeEnterToSend;
+
+  /// No description provided for @displaySettingsPageSendKeyModeCtrlEnterToSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Ctrl+Enter to send (Enter/Shift+Enter newline)'**
+  String get displaySettingsPageSendKeyModeCtrlEnterToSend;
+
+  /// No description provided for @displaySettingsPageSendKeyModeCmdEnterToSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Cmd+Enter to send (Enter/Shift+Enter newline)'**
+  String get displaySettingsPageSendKeyModeCmdEnterToSend;
+
   /// No description provided for @displaySettingsPageAutoSwitchTopicsTitle.
   ///
   /// In en, this message translates to:

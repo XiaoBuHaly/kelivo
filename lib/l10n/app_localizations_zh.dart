@@ -2858,6 +2858,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get displaySettingsPageEnterToSendTitle => '回车键发送消息';
 
   @override
+  String get displaySettingsPageSendKeyModeTitle => '发送快捷键（桌面）';
+
+  @override
+  String get displaySettingsPageSendKeyModeEnterToSend =>
+      'Enter 发送（Shift+Enter 换行）';
+
+  @override
+  String get displaySettingsPageSendKeyModeCtrlEnterToSend =>
+      'Ctrl+Enter 发送（Enter/Shift+Enter 换行）';
+
+  @override
+  String get displaySettingsPageSendKeyModeCmdEnterToSend =>
+      'Cmd+Enter 发送（Enter/Shift+Enter 换行）';
+
+  @override
   String get displaySettingsPageAutoSwitchTopicsTitle => '自动切换话题';
 
   @override
@@ -6445,6 +6460,21 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get displaySettingsPageEnterToSendTitle => '回车键发送消息';
 
   @override
+  String get displaySettingsPageSendKeyModeTitle => '发送快捷键（桌面）';
+
+  @override
+  String get displaySettingsPageSendKeyModeEnterToSend =>
+      'Enter 发送（Shift+Enter 换行）';
+
+  @override
+  String get displaySettingsPageSendKeyModeCtrlEnterToSend =>
+      'Ctrl+Enter 发送（Enter/Shift+Enter 换行）';
+
+  @override
+  String get displaySettingsPageSendKeyModeCmdEnterToSend =>
+      'Cmd+Enter 发送（Enter/Shift+Enter 换行）';
+
+  @override
   String get displaySettingsPageAutoSwitchTopicsTitle => '自动切换话题';
 
   @override
@@ -10027,6 +10057,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get displaySettingsPageEnterToSendTitle => '回車鍵發送訊息';
+
+  @override
+  String get displaySettingsPageSendKeyModeTitle => '發送快捷鍵（桌面）';
+
+  @override
+  String get displaySettingsPageSendKeyModeEnterToSend =>
+      'Enter 發送（Shift+Enter 換行）';
+
+  @override
+  String get displaySettingsPageSendKeyModeCtrlEnterToSend =>
+      'Ctrl+Enter 發送（Enter/Shift+Enter 換行）';
+
+  @override
+  String get displaySettingsPageSendKeyModeCmdEnterToSend =>
+      'Cmd+Enter 發送（Enter/Shift+Enter 換行）';
 
   @override
   String get displaySettingsPageAutoSwitchTopicsTitle => '自動切換話題';
