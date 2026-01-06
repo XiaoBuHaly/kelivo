@@ -429,25 +429,32 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
       if (shift) {
         _insertNewlineAtCursor();
       } else {
-        final sp = Provider.of<SettingsProvider>(node.context!, listen: false);
-        switch (sp.desktopSendKeyMode) {
-          case DesktopSendKeyMode.enterToSend:
-            _handleSend();
-            break;
-          case DesktopSendKeyMode.ctrlEnterToSend:
-            if (ctrl) {
+        // Only apply DesktopSendKeyMode on real desktop platforms.
+        // iPad/tablet layouts keep the existing behavior (Enter=send, Shift+Enter=newline).
+        final isDesktopPlatform = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+        if (!isDesktopPlatform) {
+          _handleSend();
+        } else {
+          final sp = Provider.of<SettingsProvider>(node.context!, listen: false);
+          switch (sp.desktopSendKeyMode) {
+            case DesktopSendKeyMode.enterToSend:
               _handleSend();
-            } else {
-              _insertNewlineAtCursor();
-            }
-            break;
-          case DesktopSendKeyMode.cmdEnterToSend:
-            if (meta) {
-              _handleSend();
-            } else {
-              _insertNewlineAtCursor();
-            }
-            break;
+              break;
+            case DesktopSendKeyMode.ctrlEnterToSend:
+              if (ctrl) {
+                _handleSend();
+              } else {
+                _insertNewlineAtCursor();
+              }
+              break;
+            case DesktopSendKeyMode.cmdEnterToSend:
+              if (meta) {
+                _handleSend();
+              } else {
+                _insertNewlineAtCursor();
+              }
+              break;
+          }
         }
       }
       return KeyEventResult.handled;
