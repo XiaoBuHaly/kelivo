@@ -19,6 +19,7 @@ import '../../../utils/clipboard_images.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/providers/assistant_provider.dart';
 import '../../../core/services/search/search_service.dart';
+import '../../../core/services/api/builtin_tools.dart';
 import '../../../utils/brand_assets.dart';
 import '../../../shared/widgets/ios_tactile.dart';
 import '../../../utils/app_directories.dart';
@@ -412,7 +413,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     final isArrow = key == LogicalKeyboardKey.arrowLeft || key == LogicalKeyboardKey.arrowRight;
     final isPasteV = key == LogicalKeyboardKey.keyV;
 
-    // Enter handling on tablet/desktop: Enter=send, Shift+Enter=newline
+    // Enter handling on tablet/desktop: configurable shortcut
     if (isEnter && isTabletOrDesktop) {
       if (!isDown) return KeyEventResult.handled; // ignore key up
       // Respect IME composition (e.g., Chinese Pinyin). If composing, let IME handle Enter.
@@ -421,10 +422,28 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
       if (composingActive) return KeyEventResult.ignored;
       final keys = RawKeyboard.instance.keysPressed;
       final shift = keys.contains(LogicalKeyboardKey.shiftLeft) || keys.contains(LogicalKeyboardKey.shiftRight);
-      if (shift) {
-        _insertNewlineAtCursor();
+      final ctrl = keys.contains(LogicalKeyboardKey.controlLeft) || keys.contains(LogicalKeyboardKey.controlRight);
+      final meta = keys.contains(LogicalKeyboardKey.metaLeft) || keys.contains(LogicalKeyboardKey.metaRight);
+      final ctrlOrMeta = ctrl || meta;
+      // Get send shortcut setting
+      final sendShortcut = Provider.of<SettingsProvider>(node.context!, listen: false).desktopSendShortcut;
+      if (sendShortcut == DesktopSendShortcut.ctrlEnter) {
+        // Ctrl/Cmd+Enter to send, Enter to newline
+        if (ctrlOrMeta) {
+          _handleSend();
+        } else if (!shift) {
+          _insertNewlineAtCursor();
+        } else {
+          // Shift+Enter also newline
+          _insertNewlineAtCursor();
+        }
       } else {
-        _handleSend();
+        // Enter to send, Shift+Enter to newline (default)
+        if (shift) {
+          _insertNewlineAtCursor();
+        } else {
+          _handleSend();
+        }
       }
       return KeyEventResult.handled;
     }
@@ -738,18 +757,14 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
         final cfg = (currentProviderKey != null)
             ? settings.getProviderConfig(currentProviderKey)
             : null;
-        bool builtinSearchActive = false;
-        if (cfg != null && currentModelId != null) {
-          final isGemini = cfg.providerType == ProviderKind.google;
-          final isClaude = cfg.providerType == ProviderKind.claude;
-          final isOpenAIResponses = cfg.providerType == ProviderKind.openai && (cfg.useResponseApi == true);
-          final isGrok = cfg.providerType == ProviderKind.openai && (currentModelId.toLowerCase().contains('grok'));
-          if (isGemini || isClaude || isOpenAIResponses || isGrok) {
-            final ov = cfg.modelOverrides[currentModelId] as Map?;
-            final list = (ov?['builtInTools'] as List?) ?? const <dynamic>[];
-            builtinSearchActive = list.map((e) => e.toString().toLowerCase()).contains('search');
-          }
-        }
+        // Check built-in tools state using helper
+        final toolsState = BuiltInToolsHelper.getActiveTools(cfg: cfg, modelId: currentModelId);
+        final builtinSearchActive = toolsState.searchActive;
+        final codeExecutionActive = toolsState.codeExecutionActive;
+        // Only Gemini built-in tools conflict with MCP in the input bar UX.
+        // OpenAI/Claude built-in search should not hide MCP tools.
+        final kind = (cfg != null) ? ProviderConfig.classify(cfg.id, explicitType: cfg.providerType) : null;
+        final anyBuiltInConflictsWithMcp = (kind == ProviderKind.google) && toolsState.anyMcpConflictingToolActive;
         final appSearchEnabled = settings.searchEnabled;
         final brandAsset = (() {
           if (!appSearchEnabled || builtinSearchActive) return null;
@@ -760,7 +775,9 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
           return BrandAssets.assetForName(svc.name);
         })();
 
-        actions.add(_OverflowAction(
+        // Search button (hidden when code_execution is active)
+        if (!codeExecutionActive) {
+          actions.add(_OverflowAction(
           width: normalButtonW,
           builder: () {
             // Not enabled at all -> default globe
@@ -815,6 +832,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
             return DesktopContextMenuItem(icon: Lucide.Globe, label: l10n.chatInputBarOnlineSearchTooltip, onTap: widget.onOpenSearch);
           }(),
         ));
+        }
 
         if (widget.supportsReasoning) {
           actions.add(_OverflowAction(
@@ -839,7 +857,8 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
           ));
         }
 
-        if (widget.showMcpButton) {
+        // MCP button (hidden only when conflicting Gemini built-in tools are active)
+        if (widget.showMcpButton && !anyBuiltInConflictsWithMcp) {
           actions.add(_OverflowAction(
             width: normalButtonW,
             builder: () => _CompactIconButton(
@@ -1152,9 +1171,10 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     final hasText = _controller.text.trim().isNotEmpty;
     final hasImages = _images.isNotEmpty;
     final hasDocs = _docs.isNotEmpty;
-    final mq = MediaQuery.of(context);
-    final bool isMobileLayout = mq.size.width < AppBreakpoints.tablet;
-    final double visibleHeight = mq.size.height - mq.viewInsets.bottom;
+    final size = MediaQuery.sizeOf(context);
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final bool isMobileLayout = size.width < AppBreakpoints.tablet;
+    final double visibleHeight = size.height - viewInsets.bottom;
     final double attachmentsHeight =
         (hasDocs ? 48 + AppSpacing.xs : 0) + (hasImages ? 64 + AppSpacing.xs : 0);
     const double baseChromeHeight = 120; // padding + action row + chrome buffer
@@ -1379,6 +1399,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
                           //   );
                           // }
 
+                            final enterToSend = context.watch<SettingsProvider>().enterToSendOnMobile;
                             return GestureDetector(
                               behavior: HitTestBehavior.deferToChild,
                               // onSecondaryTapDown: (details) {
@@ -1390,11 +1411,11 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
                                 onChanged: _onTextChanged,
                                 minLines: 1,
                                 maxLines: _isExpanded ? 25 : 5,
-                                // On iOS, show "Send" on the return key and submit on tap.
+                                // On mobile, optionally show "Send" on the return key and submit on tap.
                                 // Still keep multiline so pasted text preserves line breaks.
                                 keyboardType: TextInputType.multiline,
-                                textInputAction: Platform.isIOS ? TextInputAction.send : TextInputAction.newline,
-                                onSubmitted: Platform.isIOS ? (_) => _handleSend() : null,
+                                textInputAction: enterToSend ? TextInputAction.send : TextInputAction.newline,
+                                onSubmitted: enterToSend ? (_) => _handleSend() : null,
                                 // Custom context menu: use instance method to avoid flickering
                                 // caused by recreating the callback on every build.
                                 // See: https://github.com/flutter/flutter/issues/150551

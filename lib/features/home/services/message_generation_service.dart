@@ -87,11 +87,16 @@ class MessageGenerationService {
     required String providerKey,
     required String modelId,
   }) async {
+    final cfg = settings.getProviderConfig(providerKey);
+    final kind = ProviderConfig.classify(providerKey, explicitType: cfg.providerType);
+    final includeOpenAIToolMessages = kind == ProviderKind.openai;
+
     // Build API messages
     final apiMessages = messageBuilderService.buildApiMessages(
       messages: messages,
       versionSelections: versionSelections,
       currentConversation: currentConversation,
+      includeOpenAIToolMessages: includeOpenAIToolMessages,
     );
 
     // Process user messages (documents, OCR, templates)
@@ -103,7 +108,11 @@ class MessageGenerationService {
 
     // Inject prompts
     messageBuilderService.injectSystemPrompt(apiMessages, assistant, modelId);
-    await messageBuilderService.injectMemoryAndRecentChats(apiMessages, assistant);
+    await messageBuilderService.injectMemoryAndRecentChats(
+      apiMessages,
+      assistant,
+      currentConversationId: currentConversation?.id,
+    );
 
     final hasBuiltInSearch = messageBuilderService.hasBuiltInGeminiSearch(settings, providerKey, modelId);
     messageBuilderService.injectSearchPrompt(apiMessages, settings, hasBuiltInSearch);

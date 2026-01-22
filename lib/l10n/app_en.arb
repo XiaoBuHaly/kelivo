@@ -36,6 +36,120 @@
       }
     }
   },
+  "storageSpacePageTitle": "Storage Space",
+  "storageSpaceRefreshTooltip": "Refresh",
+  "storageSpaceLoadFailed": "Failed to load storage usage",
+  "storageSpaceTotalLabel": "Used",
+  "storageSpaceClearableLabel": "Clearable: {size}",
+  "@storageSpaceClearableLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "storageSpaceClearableHint": "Safe to clear: {size}",
+  "@storageSpaceClearableHint": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "storageSpaceCategoryImages": "Images",
+  "storageSpaceCategoryFiles": "Files",
+  "storageSpaceCategoryChatData": "Chat Records",
+  "storageSpaceCategoryAssistantData": "Assistants",
+  "storageSpaceCategoryCache": "Cache",
+  "storageSpaceCategoryLogs": "Logs",
+  "storageSpaceCategoryOther": "App",
+  "storageSpaceFilesCount": "{count} files",
+  "@storageSpaceFilesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storageSpaceSafeToClearHint": "Safe to clear. This will not affect your chat history.",
+  "storageSpaceNotSafeToClearHint": "May affect your chat history. Delete with care.",
+  "storageSpaceBreakdownTitle": "Breakdown",
+  "storageSpaceSubChatMessages": "Messages",
+  "storageSpaceSubChatConversations": "Conversations",
+  "storageSpaceSubChatToolEvents": "Tool events",
+  "storageSpaceSubAssistantAvatars": "Avatars",
+  "storageSpaceSubAssistantImages": "Images",
+  "storageSpaceSubCacheAvatars": "Avatar cache",
+  "storageSpaceSubCacheOther": "Other cache",
+  "storageSpaceSubCacheSystem": "System cache",
+  "storageSpaceSubLogsFlutter": "Flutter logs",
+  "storageSpaceSubLogsRequests": "Network logs",
+  "storageSpaceSubLogsOther": "Other logs",
+  "storageSpaceClearConfirmTitle": "Confirm clear",
+  "storageSpaceClearConfirmMessage": "Clear {targetName}?",
+  "@storageSpaceClearConfirmMessage": {
+    "placeholders": {
+      "targetName": {
+        "type": "String"
+      }
+    }
+  },
+  "storageSpaceClearButton": "Clear",
+  "storageSpaceClearDone": "{targetName} cleared",
+  "@storageSpaceClearDone": {
+    "placeholders": {
+      "targetName": {
+        "type": "String"
+      }
+    }
+  },
+  "storageSpaceClearFailed": "Clear failed: {error}",
+  "@storageSpaceClearFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "storageSpaceClearAvatarCacheButton": "Clear Avatar Cache",
+  "storageSpaceClearCacheButton": "Clear Cache",
+  "storageSpaceClearLogsButton": "Clear Logs",
+  "storageSpaceDeleteConfirmTitle": "Confirm deletion",
+  "storageSpaceDeleteUploadsConfirmMessage": "Delete {count} items? Attachments in chat history may become unavailable.",
+  "@storageSpaceDeleteUploadsConfirmMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storageSpaceDeletedUploadsDone": "Deleted {count} items",
+  "@storageSpaceDeletedUploadsDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storageSpaceNoUploads": "No items",
+  "storageSpaceSelectAll": "Select all",
+  "storageSpaceClearSelection": "Clear selection",
+  "storageSpaceSelectedCount": "{count} selected",
+  "@storageSpaceSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storageSpaceUploadsCount": "{count} items",
+  "@storageSpaceUploadsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsPageAboutSection": "About",
   "settingsPageAbout": "About",
   "settingsPageDocs": "Docs",
@@ -217,6 +331,7 @@
   "assistantEditClearButton": "Clear",
   "desktopNavChatTooltip": "Chat",
   "desktopNavTranslateTooltip": "Translate",
+  "desktopNavStorageTooltip": "Storage",
   "desktopNavThemeToggleTooltip": "Theme",
   "desktopNavSettingsTooltip": "Settings",
   "desktopAvatarMenuUseEmoji": "Use emoji",
@@ -429,6 +544,7 @@
   "backupPageBackupNow": "Backup Now",
   "backupPageLocalBackup": "Local Backup",
   "backupPageImportFromCherryStudio": "Import from Cherry Studio",
+  "backupPageImportFromChatbox": "Import from Chatbox",
   "chatHistoryPageTitle": "Chat History",
   "chatHistoryPageSearchTooltip": "Search",
   "chatHistoryPageDeleteAllTooltip": "Delete Unpinned",
@@ -790,12 +906,15 @@
   "defaultModelPageChatModelSubtitle": "Global default chat model",
   "defaultModelPageTitleModelTitle": "Title Summary Model",
   "defaultModelPageTitleModelSubtitle": "Used for summarizing conversation titles; prefer fast & cheap models",
+  "defaultModelPageSummaryModelTitle": "Summary Model",
+  "defaultModelPageSummaryModelSubtitle": "Used for generating conversation summaries; prefer fast and cheap models",
   "defaultModelPageTranslateModelTitle": "Translation Model",
   "defaultModelPageTranslateModelSubtitle": "Used for translating message content; prefer fast & accurate models",
   "defaultModelPageOcrModelTitle": "OCR Model",
   "defaultModelPageOcrModelSubtitle": "Used for extracting text and descriptions from images",
   "defaultModelPagePromptLabel": "Prompt",
   "defaultModelPageTitlePromptHint": "Enter prompt template for title summarization",
+  "defaultModelPageSummaryPromptHint": "Enter prompt template for summary generation",
   "defaultModelPageTranslatePromptHint": "Enter prompt template for translation",
   "defaultModelPageOcrPromptHint": "Enter prompt template for OCR image understanding",
   "defaultModelPageResetDefault": "Reset to default",
@@ -807,6 +926,17 @@
         "type": "String"
       },
       "localeVar": {
+        "type": "String"
+      }
+    }
+  },
+  "defaultModelPageSummaryVars": "Variables: previous summary: {previousSummaryVar}, new messages: {userMessagesVar}",
+  "@defaultModelPageSummaryVars": {
+    "placeholders": {
+      "previousSummaryVar": {
+        "type": "String"
+      },
+      "userMessagesVar": {
         "type": "String"
       }
     }
@@ -832,6 +962,7 @@
   "modelDetailSheetEditModel": "Edit Model",
   "modelDetailSheetBasicTab": "Basic",
   "modelDetailSheetAdvancedTab": "Advanced",
+  "modelDetailSheetBuiltinToolsTab": "Built-in Tools",
   "modelDetailSheetModelIdLabel": "Model ID",
   "modelDetailSheetModelIdHint": "Required, suggest lowercase/digits/hyphens",
   "modelDetailSheetModelIdDisabledHint": "{modelId}",
@@ -860,15 +991,26 @@
   "modelDetailSheetCustomBodyTitle": "Custom Body",
   "modelFetchInvertTooltip": "Invert",
   "modelDetailSheetAddBody": "Add Body",
-  "modelDetailSheetBuiltinToolsDescription": "Built-in tools currently support limited APIs (e.g., Gemini).",
+  "modelDetailSheetBuiltinToolsDescription": "Built-in tools only support official APIs.",
+  "modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint": "Code execution cannot coexist with Search/URL Context/MCP tools.",
+  "modelDetailSheetBuiltinToolsUnsupportedHint": "Current provider does not support these built-in tools.",
   "modelDetailSheetSearchTool": "Search",
   "modelDetailSheetSearchToolDescription": "Enable Google Search integration",
   "modelDetailSheetUrlContextTool": "URL Context",
   "modelDetailSheetUrlContextToolDescription": "Enable URL content ingestion",
+  "modelDetailSheetCodeExecutionTool": "Code Execution",
+  "modelDetailSheetCodeExecutionToolDescription": "Enable code execution tool",
+  "modelDetailSheetYoutubeTool": "YouTube",
+  "modelDetailSheetYoutubeToolDescription": "Enable YouTube URL ingestion (auto-detect links in prompts)",
+  "modelDetailSheetOpenaiBuiltinToolsResponsesOnlyHint": "Requires OpenAI Responses API.",
+  "modelDetailSheetOpenaiCodeInterpreterTool": "Code Interpreter",
+  "modelDetailSheetOpenaiCodeInterpreterToolDescription": "Enable code interpreter tool (container auto, memory limit 4g)",
+  "modelDetailSheetOpenaiImageGenerationTool": "Image Generation",
+  "modelDetailSheetOpenaiImageGenerationToolDescription": "Enable image generation tool",
   "modelDetailSheetCancelButton": "Cancel",
   "modelDetailSheetAddButton": "Add",
   "modelDetailSheetConfirmButton": "Confirm",
-  "modelDetailSheetInvalidIdError": "Please enter a valid model ID (>=2 chars, no spaces)",
+  "modelDetailSheetInvalidIdError": "Please enter a valid model ID (>=2 chars)",
   "modelDetailSheetModelIdExistsError": "Model ID already exists",
   "modelDetailSheetHeaderKeyHint": "Header Key",
   "modelDetailSheetHeaderValueHint": "Header Value",
@@ -1052,7 +1194,6 @@
   "searchSettingsSheetWebSearchDescription": "Enable web search in chat",
   "searchSettingsSheetOpenSearchServicesTooltip": "Open search services",
   "searchSettingsSheetNoServicesMessage": "No services. Add from Search Services.",
-  "aboutPageEasterEggTitle": "Easter Egg Unlocked!",
   "aboutPageEasterEggMessage": "Thanks for exploring! \n (No egg yet)",
   "aboutPageEasterEggButton": "Nice!",
   "aboutPageAppDescription": "Open-source AI Assistant",
@@ -1079,6 +1220,9 @@
   "displaySettingsPageAutoCollapseThinkingSubtitle": "Collapse reasoning after finish",
   "displaySettingsPageShowChatListDateTitle": "Show Chat List Dates",
   "displaySettingsPageShowChatListDateSubtitle": "Display date group labels in the conversation list",
+  "displaySettingsPageKeepSidebarOpenOnAssistantTapTitle": "Keep sidebar open when selecting assistant",
+  "displaySettingsPageKeepSidebarOpenOnTopicTapTitle": "Keep sidebar open when selecting topic",
+  "displaySettingsPageKeepAssistantListExpandedOnSidebarCloseTitle": "Don't collapse assistant list when closing sidebar",
   "displaySettingsPageShowUpdatesTitle": "Show Updates",
   "displaySettingsPageShowUpdatesSubtitle": "Show app update notifications",
   "displaySettingsPageMessageNavButtonsTitle": "Message Navigation Buttons",
@@ -1094,6 +1238,10 @@
   "displaySettingsPageNewChatAfterDeleteTitle": "New chat after deleting topic",
   "displaySettingsPageNewChatOnAssistantSwitchTitle": "New chat when switching assistants",
   "displaySettingsPageNewChatOnLaunchTitle": "New Chat on Launch",
+  "displaySettingsPageEnterToSendTitle": "Enter Key to Send",
+  "displaySettingsPageSendShortcutTitle": "Send Shortcut",
+  "displaySettingsPageSendShortcutEnter": "Enter",
+  "displaySettingsPageSendShortcutCtrlEnter": "Ctrl/Cmd + Enter",
   "displaySettingsPageAutoSwitchTopicsTitle": "Auto switch to Topics",
   "desktopDisplaySettingsTopicPositionTitle": "Topic position",
   "desktopDisplaySettingsTopicPositionLeft": "Left",
@@ -1372,5 +1520,21 @@
   "providerDetailPageBatchDetectStart": "Start Detection",
   "providerDetailPageDetectSuccess": "Detection successful",
   "providerDetailPageDetectFailed": "Detection failed",
-  "providerDetailPageDeleteAllModelsWarning": "This action cannot be undone."
+  "providerDetailPageDeleteAllModelsWarning": "This action cannot be undone.",
+  "displaySettingsPageOtherSettingsTitle": "Other Settings",
+  "requestLogSettingTitle": "Request Logging",
+  "requestLogSettingSubtitle": "When enabled, request/response details are written to logs/logs.txt (rotated daily).",
+  "flutterLogSettingTitle": "Flutter Logging",
+  "flutterLogSettingSubtitle": "When enabled, Flutter errors and print output are written to logs/flutter_logs.txt (rotated daily).",
+  "logViewerTitle": "Request Logs",
+  "logViewerEmpty": "No logs yet",
+  "logViewerCurrentLog": "Current Log",
+  "logViewerExport": "Export",
+  "logViewerOpenFolder": "Open Logs Folder",
+  "assistantEditManageSummariesTitle": "Manage Summaries",
+  "assistantEditSummaryEmpty": "No summaries yet",
+  "assistantEditSummaryDialogTitle": "Edit Summary",
+  "assistantEditSummaryDialogHint": "Enter summary content",
+  "assistantEditDeleteSummaryTitle": "Clear Summary",
+  "assistantEditDeleteSummaryContent": "Are you sure you want to clear this summary?"
 }

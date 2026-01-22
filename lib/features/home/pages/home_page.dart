@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show TargetPlatform;
@@ -15,6 +16,7 @@ import '../../../core/providers/quick_phrase_provider.dart';
 import '../../../core/providers/instruction_injection_provider.dart';
 import '../../../core/models/quick_phrase.dart';
 import '../../../core/models/chat_message.dart';
+import '../../../core/services/android_process_text.dart';
 import '../../../utils/sandbox_path_resolver.dart';
 import '../../../utils/platform_utils.dart';
 import '../../../desktop/search_provider_popover.dart';
@@ -41,6 +43,7 @@ import '../widgets/selection_toolbar.dart';
 import '../widgets/message_list_view.dart';
 import '../widgets/chat_input_section.dart';
 import '../utils/model_display_helper.dart';
+import '../utils/chat_layout_constants.dart';
 import '../controllers/home_page_controller.dart';
 import 'home_mobile_layout.dart';
 import 'home_desktop_layout.dart';
@@ -66,6 +69,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   final ChatInputBarController _mediaController = ChatInputBarController();
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _inputBarKey = GlobalKey();
+  StreamSubscription<String>? _processTextSub;
 
   // ============================================================================
   // Page Controller (manages all business logic and state)
@@ -97,6 +101,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     _drawerController.addListener(_onDrawerValueChanged);
 
     _controller.initChat();
+    _initProcessText();
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _controller.measureInputBar());
   }
@@ -128,6 +133,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   @override
   void dispose() {
     try { WidgetsBinding.instance.removeObserver(this); } catch (_) {}
+    _processTextSub?.cancel();
     _controller.removeListener(_onControllerChanged);
     _drawerController.removeListener(_onDrawerValueChanged);
     _inputFocus.dispose();
@@ -146,8 +152,47 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     _controller.onDrawerValueChanged(_drawerController.value);
     // Close assistant picker when drawer closes
     if (_drawerController.value < 0.95) {
-      _assistantPickerCloseTick.value++;
+      final sp = context.read<SettingsProvider>();
+      if (!sp.keepAssistantListExpandedOnSidebarClose) {
+        _assistantPickerCloseTick.value++;
+      }
     }
+  }
+
+  void _initProcessText() {
+    if (!PlatformUtils.isAndroid) return;
+    AndroidProcessText.ensureInitialized();
+    _processTextSub = AndroidProcessText.stream.listen(_handleProcessText);
+    AndroidProcessText.getInitialText().then((text) {
+      if (text != null) {
+        _handleProcessText(text);
+      }
+    });
+  }
+
+  void _handleProcessText(String text) {
+    if (!mounted) return;
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+    final current = _inputController.text;
+    final selection = _inputController.selection;
+    final start = (selection.start >= 0 && selection.start <= current.length)
+        ? selection.start
+        : current.length;
+    final end = (selection.end >= 0 && selection.end <= current.length && selection.end >= start)
+        ? selection.end
+        : start;
+    final next = current.replaceRange(start, end, trimmed);
+    _inputController.value = _inputController.value.copyWith(
+      text: next,
+      selection: TextSelection.collapsed(offset: start + trimmed.length),
+      composing: TextRange.empty,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _controller.forceScrollToBottomSoon(animate: false);
+      _inputFocus.requestFocus();
+    });
   }
 
   // ============================================================================
@@ -205,11 +250,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       onDismissKeyboard: _controller.dismissKeyboard,
       onSelectConversation: (id) {
         _controller.switchConversationAnimated(id);
-        _drawerController.close();
       },
       onNewConversation: () async {
         await _controller.createNewConversationAnimated();
-        _drawerController.close();
       },
       onOpenMiniMap: () async {
         final collapsed = _controller.collapseVersions(_controller.messages);
@@ -242,7 +285,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         _buildChatBackground(context, cs),
         // Main content
         Padding(
-          padding: EdgeInsets.only(top: kToolbarHeight + MediaQuery.of(context).padding.top),
+          padding: EdgeInsets.only(top: kToolbarHeight + MediaQuery.paddingOf(context).top),
           child: Column(
             children: [
               Expanded(
@@ -338,49 +381,46 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     return Stack(
       children: [
         Padding(
-          padding: EdgeInsets.only(top: kToolbarHeight + MediaQuery.of(context).padding.top),
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 860),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: FadeTransition(
-                      opacity: _controller.convoFade,
-                      child: KeyedSubtree(
-                        key: ValueKey<String>(_controller.currentConversation?.id ?? 'none'),
-                        child: _buildMessageListView(
-                          context,
-                          dividerPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                        ),
-                      ).animate(key: ValueKey('tab_body_'+(_controller.currentConversation?.id ?? 'none')))
-                       .fadeIn(duration: 200.ms, curve: Curves.easeOutCubic),
+          padding: EdgeInsets.only(top: kToolbarHeight + MediaQuery.paddingOf(context).top),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: FadeTransition(
+                  opacity: _controller.convoFade,
+                  child: KeyedSubtree(
+                    key: ValueKey<String>(_controller.currentConversation?.id ?? 'none'),
+                    child: _buildMessageListView(
+                      context,
+                      dividerPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                     ),
-                  ),
-                  NotificationListener<SizeChangedLayoutNotification>(
-                    onNotification: (n) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) => _controller.measureInputBar());
-                      return false;
-                    },
-                    child: SizeChangedLayoutNotifier(
-                      child: Builder(
-                        builder: (context) {
-                          Widget input = _buildChatInputBar(context, isTablet: true);
-                          input = Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 800),
-                              child: input,
-                            ),
-                          );
-                          return input;
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+                  ).animate(key: ValueKey('tab_body_'+(_controller.currentConversation?.id ?? 'none')))
+                   .fadeIn(duration: 200.ms, curve: Curves.easeOutCubic),
+                ),
               ),
-            ),
+              NotificationListener<SizeChangedLayoutNotification>(
+                onNotification: (n) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) => _controller.measureInputBar());
+                  return false;
+                },
+                child: SizeChangedLayoutNotifier(
+                  child: Builder(
+                    builder: (context) {
+                      Widget input = _buildChatInputBar(context, isTablet: true);
+                      input = Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: ChatLayoutConstants.maxInputWidth,
+                          ),
+                          child: input,
+                        ),
+                      );
+                      return input;
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         _buildSelectionToolbarOverlay(),

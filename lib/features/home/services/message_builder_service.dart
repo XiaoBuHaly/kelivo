@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/assistant.dart';
@@ -14,6 +15,7 @@ import '../../../core/services/chat/prompt_transformer.dart';
 import '../../../core/services/instruction_injection_store.dart';
 import '../../../core/services/search/search_tool_service.dart';
 import '../../../core/providers/instruction_injection_provider.dart';
+import '../../../core/services/api/builtin_tools.dart';
 import '../../../utils/markdown_media_sanitizer.dart';
 
 /// Service for building API messages from conversation state.
@@ -93,6 +95,7 @@ class MessageBuilderService {
     required List<ChatMessage> messages,
     required Map<String, int> versionSelections,
     required Conversation? currentConversation,
+    bool includeOpenAIToolMessages = false,
   }) {
     final tIndex = currentConversation?.truncateIndex ?? -1;
     final List<ChatMessage> sourceAll = (tIndex >= 0 && tIndex <= messages.length)
@@ -100,19 +103,70 @@ class MessageBuilderService {
         : List.of(messages);
     final List<ChatMessage> source = collapseVersions(sourceAll, versionSelections);
 
-    return source
-        .where((m) => m.content.isNotEmpty)
-        .map<Map<String, dynamic>>((m) {
-          var content = m.content;
-          if (m.role == 'assistant' && geminiThoughtSignatureHandler != null) {
-            content = geminiThoughtSignatureHandler!(m, content);
+    final out = <Map<String, dynamic>>[];
+
+    for (final m in source) {
+      if (includeOpenAIToolMessages && m.role == 'assistant') {
+        final events = chatService.getToolEvents(m.id);
+        if (events.isNotEmpty) {
+          final calls = <Map<String, dynamic>>[];
+          final toolMessages = <Map<String, dynamic>>[];
+
+          for (int i = 0; i < events.length; i++) {
+            final e = events[i];
+            final name = (e['name'] ?? '').toString().trim();
+            if (name.isEmpty) continue;
+            final rawId = (e['id'] ?? '').toString().trim();
+            final id = rawId.isNotEmpty
+                ? rawId
+                : 'call_${m.id.substring(0, m.id.length < 8 ? m.id.length : 8)}_$i';
+
+            Map<String, dynamic> args = const <String, dynamic>{};
+            final a = e['arguments'];
+            if (a is Map) {
+              args = a.map((k, v) => MapEntry(k.toString(), v));
+            }
+            String argumentsJson = '{}';
+            try {
+              argumentsJson = jsonEncode(args);
+            } catch (_) {}
+
+            calls.add({
+              'id': id,
+              'type': 'function',
+              'function': {'name': name, 'arguments': argumentsJson},
+            });
+
+            final c = e['content'];
+            if (c != null) {
+              toolMessages.add({
+                'role': 'tool',
+                'name': name,
+                'tool_call_id': id,
+                'content': c.toString(),
+              });
+            }
           }
-          return <String, dynamic>{
-            'role': m.role == 'assistant' ? 'assistant' : 'user',
-            'content': content,
-          };
-        })
-        .toList();
+
+          if (calls.isNotEmpty) {
+            out.add({'role': 'assistant', 'content': '\n\n', 'tool_calls': calls});
+            out.addAll(toolMessages);
+          }
+        }
+      }
+
+      var content = m.content;
+      if (m.role == 'assistant' && geminiThoughtSignatureHandler != null) {
+        content = geminiThoughtSignatureHandler!(m, content);
+      }
+      if (content.isEmpty) continue;
+      out.add(<String, dynamic>{
+        'role': m.role == 'assistant' ? 'assistant' : 'user',
+        'content': content,
+      });
+    }
+
+    return out;
   }
 
   /// Parse input data from raw message content (extracts images and documents).
@@ -294,8 +348,9 @@ class MessageBuilderService {
   /// Inject memory prompts and recent chats reference into apiMessages.
   Future<void> injectMemoryAndRecentChats(
     List<Map<String, dynamic>> apiMessages,
-    Assistant? assistant,
-  ) async {
+    Assistant? assistant, {
+    String? currentConversationId,
+  }) async {
     try {
       if (assistant?.enableMemory == true) {
         final mp = contextProvider.read<MemoryProvider>();
@@ -338,20 +393,26 @@ class MessageBuilderService {
       }
       if (assistant?.enableRecentChatsReference == true) {
         final chats = chatService.getAllConversations();
-        final titles = chats
-            .where((c) => c.assistantId == assistant!.id)
+        final relevantChats = chats
+            .where((c) => c.assistantId == assistant!.id && c.id != currentConversationId)
+            .where((c) => c.title.trim().isNotEmpty)
             .take(10)
-            .map((c) => c.title)
-            .where((t) => t.trim().isNotEmpty)
             .toList();
-        if (titles.isNotEmpty) {
+        if (relevantChats.isNotEmpty) {
           final sb = StringBuffer();
-          sb.writeln('## 最近的对话');
-          sb.writeln('这是用户最近的一些对话，你可以参考这些对话了解用户偏好:');
           sb.writeln('<recent_chats>');
-          for (final t in titles) {
+          sb.writeln('这是用户最近的一些对话标题和摘要，你可以参考这些内容了解用户偏好和关注点');
+          for (final c in relevantChats) {
             sb.writeln('<conversation>');
-            sb.writeln('  <title>$t</title>');
+            // Format: timestamp: title || summary
+            final timestamp = c.updatedAt.toIso8601String().substring(0, 10);
+            final title = c.title.trim();
+            final summary = (c.summary ?? '').trim();
+            if (summary.isNotEmpty) {
+              sb.writeln('  $timestamp: $title || $summary');
+            } else {
+              sb.writeln('  $timestamp: $title');
+            }
             sb.writeln('</conversation>');
           }
           sb.writeln('</recent_chats>');
@@ -424,6 +485,10 @@ class MessageBuilderService {
           ..removeRange(startIdx, apiMessages.length)
           ..addAll(trimmed);
       }
+      // Context trimming can cut in the middle of a tool-call triplet; avoid sending dangling tool messages.
+      while (apiMessages.length > startIdx && (apiMessages[startIdx]['role'] ?? '').toString() == 'tool') {
+        apiMessages.removeAt(startIdx);
+      }
     }
   }
 
@@ -442,9 +507,10 @@ class MessageBuilderService {
     try {
       final cfg = settings.getProviderConfig(providerKey);
       if (cfg.providerType != ProviderKind.google) return false;
-      final ov = cfg.modelOverrides[modelId] as Map?;
-      final list = (ov?['builtInTools'] as List?) ?? const <dynamic>[];
-      return list.map((e) => e.toString().toLowerCase()).contains('search');
+      final rawOv = cfg.modelOverrides[modelId];
+      final ov = rawOv is Map ? rawOv : null;
+      final builtIns = BuiltInToolNames.parseAndNormalize(ov?['builtInTools']);
+      return builtIns.contains(BuiltInToolNames.search);
     } catch (_) {
       return false;
     }

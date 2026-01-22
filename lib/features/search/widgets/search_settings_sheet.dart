@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/services/search/search_service.dart';
 import '../../../core/providers/assistant_provider.dart';
+import '../../../core/services/api/builtin_tools.dart';
 import '../../../icons/lucide_adapter.dart';
 import '../pages/search_services_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -116,18 +117,21 @@ class _SearchSettingsSheet extends StatelessWidget {
         cfg.providerType == ProviderKind.openai &&
         (modelId ?? '').toLowerCase().contains('grok');
 
-    // Read current built-in search toggle from modelOverrides
+    // Read current built-in search/url_context toggle from modelOverrides
     bool hasBuiltInSearch = false;
+    bool hasUrlContext = false;
     if ((isGeminiProvider || isClaude || isOpenAIResponses || isGrok) &&
         providerKey != null &&
         (modelId ?? '').isNotEmpty) {
       final mid = modelId!;
-      final ov = cfg!.modelOverrides[mid] as Map?;
-      final list = (ov?['builtInTools'] as List?) ?? const <dynamic>[];
-      hasBuiltInSearch = list
-          .map((e) => e.toString().toLowerCase())
-          .contains('search');
+      final rawOv = cfg!.modelOverrides[mid];
+      final ov = rawOv is Map ? rawOv : null;
+      final builtInSet = BuiltInToolNames.parseAndNormalize(ov?['builtInTools']);
+      hasBuiltInSearch = builtInSet.contains(BuiltInToolNames.search);
+      hasUrlContext = builtInSet.contains(BuiltInToolNames.urlContext);
     }
+    // When url_context is active, treat as built-in search mode (hide external search options)
+    final builtInMode = hasBuiltInSearch || hasUrlContext;
     // Claude supported models per Anthropic docs
     final claudeSupportedModels = <String>{
       'claude-sonnet-4-5-20250929',
@@ -213,25 +217,25 @@ class _SearchSettingsSheet extends StatelessWidget {
                       final overrides = Map<String, dynamic>.from(
                         cfg!.modelOverrides,
                       );
+                      final rawMo = overrides[mid];
+                      final baseMo = rawMo is Map ? rawMo : null;
                       final mo = Map<String, dynamic>.from(
-                        (overrides[mid] as Map?)?.map(
+                        baseMo?.map(
                               (k, val) => MapEntry(k.toString(), val),
                             ) ??
                             const <String, dynamic>{},
                       );
-                      final list = List<String>.from(
-                        ((mo['builtInTools'] as List?) ?? const <dynamic>[])
-                            .map((e) => e.toString()),
-                      );
+                      final builtIns = BuiltInToolNames.parseAndNormalize(mo['builtInTools']);
                       if (v) {
-                        if (!list
-                            .map((e) => e.toLowerCase())
-                            .contains('search'))
-                          list.add('search');
+                        builtIns.add(BuiltInToolNames.search);
                       } else {
-                        list.removeWhere((e) => e.toLowerCase() == 'search');
+                        builtIns.remove(BuiltInToolNames.search);
                       }
-                      mo['builtInTools'] = list;
+                      if (builtIns.isEmpty) {
+                        mo.remove('builtInTools');
+                      } else {
+                        mo['builtInTools'] = BuiltInToolNames.orderedForStorage(builtIns);
+                      }
                       overrides[mid] = mo;
                       await context.read<SettingsProvider>().setProviderConfig(
                         providerKey,
@@ -279,28 +283,25 @@ class _SearchSettingsSheet extends StatelessWidget {
                             final overrides = Map<String, dynamic>.from(
                               cfg!.modelOverrides,
                             );
+                            final rawMo = overrides[mid];
+                            final baseMo = rawMo is Map ? rawMo : null;
                             final mo = Map<String, dynamic>.from(
-                              (overrides[mid] as Map?)?.map(
+                              baseMo?.map(
                                     (k, val) => MapEntry(k.toString(), val),
                                   ) ??
                                   const <String, dynamic>{},
                             );
-                            final list = List<String>.from(
-                              ((mo['builtInTools'] as List?) ??
-                                      const <dynamic>[])
-                                  .map((e) => e.toString()),
-                            );
+                            final builtIns = BuiltInToolNames.parseAndNormalize(mo['builtInTools']);
                             if (v) {
-                              if (!list
-                                  .map((e) => e.toLowerCase())
-                                  .contains('search'))
-                                list.add('search');
+                              builtIns.add(BuiltInToolNames.search);
                             } else {
-                              list.removeWhere(
-                                (e) => e.toLowerCase() == 'search',
-                              );
+                              builtIns.remove(BuiltInToolNames.search);
                             }
-                            mo['builtInTools'] = list;
+                            if (builtIns.isEmpty) {
+                              mo.remove('builtInTools');
+                            } else {
+                              mo['builtInTools'] = BuiltInToolNames.orderedForStorage(builtIns);
+                            }
                             overrides[mid] = mo;
                             await context
                                 .read<SettingsProvider>()
@@ -322,7 +323,7 @@ class _SearchSettingsSheet extends StatelessWidget {
                 ],
 
                 // Toggle card
-                if (!hasBuiltInSearch) ...[
+                if (!builtInMode) ...[
                   IosCardPress(
                     borderRadius: BorderRadius.circular(14),
                     baseColor: cs.surface,
@@ -383,7 +384,7 @@ class _SearchSettingsSheet extends StatelessWidget {
                   const SizedBox(height: 14),
                 ],
                 // Services list (iOS-style rows like learning mode)
-                if (!hasBuiltInSearch && services.isNotEmpty) ...[
+                if (!builtInMode && services.isNotEmpty) ...[
                   ...List.generate(services.length, (i) {
                     final s = services[i];
                     final bool isSelected = i == selected;
@@ -434,7 +435,7 @@ class _SearchSettingsSheet extends StatelessWidget {
                     );
                   }),
                   const SizedBox(height: 8),
-                ] else if (!hasBuiltInSearch) ...[
+                ] else if (!builtInMode) ...[
                   Text(
                     l10n.searchSettingsSheetNoServicesMessage,
                     style: TextStyle(color: cs.onSurface.withOpacity(0.7)),

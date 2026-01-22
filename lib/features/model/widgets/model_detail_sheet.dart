@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/settings_provider.dart';
-import '../../../core/providers/assistant_provider.dart';
 import '../../../core/providers/model_provider.dart';
+import '../../../core/services/api/builtin_tools.dart';
 import '../../../icons/lucide_adapter.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../shared/widgets/snackbar.dart';
@@ -67,6 +67,8 @@ enum _TabKind { basic, advanced, tools }
 class _ModelDetailSheetState extends State<_ModelDetailSheet> with SingleTickerProviderStateMixin {
   _TabKind _tab = _TabKind.basic;
   late final TabController _tabCtrl;
+  late final ProviderKind _providerKind;
+  late final bool _showBuiltinToolsTab;
 
   late TextEditingController _idCtrl;
   late TextEditingController _nameCtrl;
@@ -79,21 +81,34 @@ class _ModelDetailSheetState extends State<_ModelDetailSheet> with SingleTickerP
   // Advanced (UI only)
   final List<_HeaderKV> _headers = [];
   final List<_BodyKV> _bodies = [];
-  bool _searchTool = false;
-  bool _urlContextTool = false;
+
+  // Built-in tools (per provider)
+  bool _googleUrlContextTool = false;
+  bool _googleCodeExecutionTool = false;
+  bool _googleYoutubeTool = false;
+  bool _openaiCodeInterpreterTool = false;
+  bool _openaiImageGenerationTool = false;
 
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 2, vsync: this);
+    final settings = context.read<SettingsProvider>();
+    final cfg = settings.getProviderConfig(widget.providerKey);
+    _providerKind = ProviderConfig.classify(cfg.id, explicitType: cfg.providerType);
+    _showBuiltinToolsTab = _providerKind == ProviderKind.google || _providerKind == ProviderKind.openai;
+    _tabCtrl = TabController(length: _showBuiltinToolsTab ? 3 : 2, vsync: this);
     _tabCtrl.addListener(() {
       if (_tabCtrl.indexIsChanging) return;
       setState(() {
-        _tab = (_tabCtrl.index == 0) ? _TabKind.basic : _TabKind.advanced;
+        if (_tabCtrl.index == 0) {
+          _tab = _TabKind.basic;
+        } else if (_tabCtrl.index == 1) {
+          _tab = _TabKind.advanced;
+        } else {
+          _tab = _TabKind.tools;
+        }
       });
     });
-    final settings = context.read<SettingsProvider>();
-    final cfg = settings.getProviderConfig(widget.providerKey);
     // Resolve display model id from per-model overrides when present (apiModelId),
     // falling back to the logical key for backwards compatibility.
     Map? _initialOv;
@@ -123,7 +138,8 @@ class _ModelDetailSheetState extends State<_ModelDetailSheet> with SingleTickerP
     _abilities..clear()..addAll(base.abilities);
 
     if (!widget.isNew) {
-      final ov = _initialOv ?? cfg.modelOverrides[widget.modelId] as Map?;
+      final rawOv = cfg.modelOverrides[widget.modelId];
+      final ov = _initialOv ?? (rawOv is Map ? rawOv : null);
       if (ov != null) {
         _nameCtrl.text = (ov['name'] as String?)?.trim().isNotEmpty == true ? (ov['name'] as String) : _nameCtrl.text;
         final t = (ov['type'] as String?) ?? '';
@@ -135,7 +151,8 @@ class _ModelDetailSheetState extends State<_ModelDetailSheet> with SingleTickerP
         _output..clear()..addAll(outArr.map((e) => e == 'image' ? Modality.image : Modality.text));
         _abilities..clear()..addAll(abArr.map((e) => e == 'reasoning' ? ModelAbility.reasoning : ModelAbility.tool));
         // headers/body
-        final hdrs = (ov['headers'] as List?) ?? const [];
+        final rawHdrs = ov['headers'];
+        final hdrs = (rawHdrs is List) ? rawHdrs : const <dynamic>[];
         for (final h in hdrs) {
           if (h is Map) {
             final kv = _HeaderKV();
@@ -144,7 +161,8 @@ class _ModelDetailSheetState extends State<_ModelDetailSheet> with SingleTickerP
             _headers.add(kv);
           }
         }
-        final bds = (ov['body'] as List?) ?? const [];
+        final rawBds = ov['body'];
+        final bds = (rawBds is List) ? rawBds : const <dynamic>[];
         for (final b in bds) {
           if (b is Map) {
             final kv = _BodyKV();
@@ -153,10 +171,20 @@ class _ModelDetailSheetState extends State<_ModelDetailSheet> with SingleTickerP
             _bodies.add(kv);
           }
         }
-        // tools toggles
-        final tools = (ov['tools'] as Map?) ?? const {};
-        _searchTool = (tools['search'] as bool?) ?? false;
-        _urlContextTool = (tools['urlContext'] as bool?) ?? false;
+        // Built-in tools toggles
+        final builtInSet = BuiltInToolNames.parseAndNormalize(ov['builtInTools']);
+
+        _googleUrlContextTool = builtInSet.contains(BuiltInToolNames.urlContext);
+        _googleCodeExecutionTool = builtInSet.contains(BuiltInToolNames.codeExecution);
+        _googleYoutubeTool = builtInSet.contains(BuiltInToolNames.youtube);
+
+        _openaiCodeInterpreterTool = builtInSet.contains(BuiltInToolNames.codeInterpreter);
+        _openaiImageGenerationTool = builtInSet.contains(BuiltInToolNames.imageGeneration);
+
+        // Backward compatibility: legacy UI-only tools map (older versions)
+        final rawTools = ov['tools'];
+        final tools = rawTools is Map ? rawTools : const <dynamic, dynamic>{};
+        _googleUrlContextTool = _googleUrlContextTool || ((tools['urlContext'] as bool?) ?? false);
       }
     }
   }
@@ -238,11 +266,16 @@ class _ModelDetailSheetState extends State<_ModelDetailSheet> with SingleTickerP
 
   Widget _buildTabs(BuildContext context, AppLocalizations l10n) {
     // iOS segmented tabs like provider add sheet
+    final tabs = <String>[
+      l10n.modelDetailSheetBasicTab,
+      l10n.modelDetailSheetAdvancedTab,
+      if (_showBuiltinToolsTab) l10n.modelDetailSheetBuiltinToolsTab,
+    ];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: _SegTabBar(
         controller: _tabCtrl,
-        tabs: [l10n.modelDetailSheetBasicTab, l10n.modelDetailSheetAdvancedTab],
+        tabs: tabs,
       ),
     );
   }
@@ -471,6 +504,8 @@ class _ModelDetailSheetState extends State<_ModelDetailSheet> with SingleTickerP
 
   List<Widget> _buildTools(BuildContext context, AppLocalizations l10n) {
     final cs = Theme.of(context).colorScheme;
+    final settings = context.watch<SettingsProvider>();
+    final cfg = settings.getProviderConfig(widget.providerKey);
     return [
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -479,24 +514,86 @@ class _ModelDetailSheetState extends State<_ModelDetailSheet> with SingleTickerP
           style: TextStyle(color: cs.onSurface.withOpacity(0.8), fontSize: 13),
         ),
       ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-        child: _ToolTile(
-          title: l10n.modelDetailSheetSearchTool,
-          desc: l10n.modelDetailSheetSearchToolDescription,
-          value: _searchTool,
-          onChanged: (v) => setState(() => _searchTool = v),
+      if (_providerKind == ProviderKind.google) ...[
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          child: Text(
+            l10n.modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint,
+            style: TextStyle(color: cs.onSurface.withOpacity(0.65), fontSize: 12),
+          ),
         ),
-      ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-        child: _ToolTile(
-          title: l10n.modelDetailSheetUrlContextTool,
-          desc: l10n.modelDetailSheetUrlContextToolDescription,
-          value: _urlContextTool,
-          onChanged: (v) => setState(() => _urlContextTool = v),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          child: _ToolTile(
+            title: l10n.modelDetailSheetUrlContextTool,
+            desc: l10n.modelDetailSheetUrlContextToolDescription,
+            value: _googleUrlContextTool,
+            // URL Context is disabled when Code Execution is enabled (mutually exclusive)
+            onChanged: _googleCodeExecutionTool
+                ? null
+                : (v) => setState(() => _googleUrlContextTool = v),
+          ),
         ),
-      ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: _ToolTile(
+            title: l10n.modelDetailSheetCodeExecutionTool,
+            desc: l10n.modelDetailSheetCodeExecutionToolDescription,
+            value: _googleCodeExecutionTool,
+            // Code Execution is disabled when URL Context is enabled (mutually exclusive)
+            onChanged: _googleUrlContextTool
+                ? null
+                : (v) => setState(() => _googleCodeExecutionTool = v),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: _ToolTile(
+            title: l10n.modelDetailSheetYoutubeTool,
+            desc: l10n.modelDetailSheetYoutubeToolDescription,
+            value: _googleYoutubeTool,
+            onChanged: (v) => setState(() => _googleYoutubeTool = v),
+          ),
+        ),
+      ] else if (_providerKind == ProviderKind.openai) ...[
+        if (cfg.useResponseApi != true)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            child: Text(
+              l10n.modelDetailSheetOpenaiBuiltinToolsResponsesOnlyHint,
+              style: TextStyle(color: cs.onSurface.withOpacity(0.65), fontSize: 12),
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          child: _ToolTile(
+            title: l10n.modelDetailSheetOpenaiCodeInterpreterTool,
+            desc: l10n.modelDetailSheetOpenaiCodeInterpreterToolDescription,
+            value: _openaiCodeInterpreterTool,
+            onChanged: (cfg.useResponseApi == true)
+                ? (v) => setState(() => _openaiCodeInterpreterTool = v)
+                : null,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: _ToolTile(
+            title: l10n.modelDetailSheetOpenaiImageGenerationTool,
+            desc: l10n.modelDetailSheetOpenaiImageGenerationToolDescription,
+            value: _openaiImageGenerationTool,
+            onChanged: (cfg.useResponseApi == true)
+                ? (v) => setState(() => _openaiImageGenerationTool = v)
+                : null,
+          ),
+        ),
+      ] else
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+          child: Text(
+            l10n.modelDetailSheetBuiltinToolsUnsupportedHint,
+            style: TextStyle(color: cs.onSurface.withOpacity(0.65), fontSize: 12),
+          ),
+        ),
     ];
   }
 
@@ -545,7 +642,7 @@ class _ModelDetailSheetState extends State<_ModelDetailSheet> with SingleTickerP
     // Upstream/vendor model id typed by the user
     final String apiModelId = _idCtrl.text.trim();
     // Basic validation
-    if (apiModelId.isEmpty || apiModelId.length < 2 || apiModelId.contains(' ')) {
+    if (apiModelId.isEmpty || apiModelId.length < 2) {
       final l10n = AppLocalizations.of(context)!;
       showAppSnackBar(
         context,
@@ -566,6 +663,24 @@ class _ModelDetailSheetState extends State<_ModelDetailSheet> with SingleTickerP
         if (b.keyCtrl.text.trim().isNotEmpty)
           {'key': b.keyCtrl.text.trim(), 'value': b.valueCtrl.text}
     ];
+    final prev = (prevKey.isNotEmpty && ov[prevKey] is Map)
+        ? (ov[prevKey] as Map).cast<String, dynamic>()
+        : const <String, dynamic>{};
+    final builtInSet = BuiltInToolNames.parseAndNormalize(prev['builtInTools']);
+    if (_providerKind == ProviderKind.google) {
+      builtInSet.remove(BuiltInToolNames.urlContext);
+      builtInSet.remove(BuiltInToolNames.codeExecution);
+      builtInSet.remove(BuiltInToolNames.youtube);
+      if (_googleUrlContextTool) builtInSet.add(BuiltInToolNames.urlContext);
+      if (_googleCodeExecutionTool) builtInSet.add(BuiltInToolNames.codeExecution);
+      if (_googleYoutubeTool) builtInSet.add(BuiltInToolNames.youtube);
+    } else if (_providerKind == ProviderKind.openai) {
+      builtInSet.remove(BuiltInToolNames.codeInterpreter);
+      builtInSet.remove(BuiltInToolNames.imageGeneration);
+      if (_openaiCodeInterpreterTool) builtInSet.add(BuiltInToolNames.codeInterpreter);
+      if (_openaiImageGenerationTool) builtInSet.add(BuiltInToolNames.imageGeneration);
+    }
+    final builtInTools = BuiltInToolNames.orderedForStorage(builtInSet);
     // Decide which logical key to use for this instance
     final String key = (prevKey.isEmpty || widget.isNew) ? _nextModelKey(old, apiModelId) : prevKey;
     ov[key] = {
@@ -577,10 +692,7 @@ class _ModelDetailSheetState extends State<_ModelDetailSheet> with SingleTickerP
       'abilities': _abilities.map((e) => e == ModelAbility.reasoning ? 'reasoning' : 'tool').toList(),
       'headers': headers,
       'body': bodies,
-      'tools': {
-        'search': _searchTool,
-        'urlContext': _urlContextTool,
-      },
+      if (builtInTools.isNotEmpty) 'builtInTools': builtInTools,
     };
 
     // Apply updates to provider config
@@ -893,29 +1005,34 @@ class _ToolTile extends StatelessWidget {
   final String title;
   final String desc;
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onChanged;
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: isDark ? Colors.white10 : const Color(0xFFF2F3F5),
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  Text(desc, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7))),
-                ],
+    final cs = Theme.of(context).colorScheme;
+    final bool isDisabled = onChanged == null;
+    return Opacity(
+      opacity: isDisabled ? 0.45 : 1.0,
+      child: Material(
+        color: isDark ? Colors.white10 : const Color(0xFFF2F3F5),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    Text(desc, style: TextStyle(fontSize: 12, color: cs.onSurface.withOpacity(0.7))),
+                  ],
+                ),
               ),
-            ),
-            IosSwitch(value: value, onChanged: onChanged),
-          ],
+              IosSwitch(value: value, onChanged: onChanged),
+            ],
+          ),
         ),
       ),
     );

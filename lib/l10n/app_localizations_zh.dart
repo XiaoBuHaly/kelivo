@@ -92,6 +92,158 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get storageSpacePageTitle => '存储空间';
+
+  @override
+  String get storageSpaceRefreshTooltip => '刷新';
+
+  @override
+  String get storageSpaceLoadFailed => '加载失败';
+
+  @override
+  String get storageSpaceTotalLabel => '已用空间';
+
+  @override
+  String storageSpaceClearableLabel(String size) {
+    return '可清理：$size';
+  }
+
+  @override
+  String storageSpaceClearableHint(String size) {
+    return '共发现可清理空间 $size';
+  }
+
+  @override
+  String get storageSpaceCategoryImages => '图片';
+
+  @override
+  String get storageSpaceCategoryFiles => '文件';
+
+  @override
+  String get storageSpaceCategoryChatData => '聊天记录';
+
+  @override
+  String get storageSpaceCategoryAssistantData => '助手';
+
+  @override
+  String get storageSpaceCategoryCache => '缓存';
+
+  @override
+  String get storageSpaceCategoryLogs => '日志';
+
+  @override
+  String get storageSpaceCategoryOther => '应用';
+
+  @override
+  String storageSpaceFilesCount(int count) {
+    return '$count 个文件';
+  }
+
+  @override
+  String get storageSpaceSafeToClearHint => '可安全清理，不影响聊天记录。';
+
+  @override
+  String get storageSpaceNotSafeToClearHint => '可能影响聊天记录，请谨慎删除。';
+
+  @override
+  String get storageSpaceBreakdownTitle => '明细';
+
+  @override
+  String get storageSpaceSubChatMessages => '消息';
+
+  @override
+  String get storageSpaceSubChatConversations => '会话';
+
+  @override
+  String get storageSpaceSubChatToolEvents => '工具事件';
+
+  @override
+  String get storageSpaceSubAssistantAvatars => '头像';
+
+  @override
+  String get storageSpaceSubAssistantImages => '图片';
+
+  @override
+  String get storageSpaceSubCacheAvatars => '头像缓存';
+
+  @override
+  String get storageSpaceSubCacheOther => '其他缓存';
+
+  @override
+  String get storageSpaceSubCacheSystem => '系统缓存';
+
+  @override
+  String get storageSpaceSubLogsFlutter => '运行日志';
+
+  @override
+  String get storageSpaceSubLogsRequests => '网络日志';
+
+  @override
+  String get storageSpaceSubLogsOther => '其他日志';
+
+  @override
+  String get storageSpaceClearConfirmTitle => '确认清理';
+
+  @override
+  String storageSpaceClearConfirmMessage(String targetName) {
+    return '确定要清理 $targetName 吗？';
+  }
+
+  @override
+  String get storageSpaceClearButton => '清理';
+
+  @override
+  String storageSpaceClearDone(String targetName) {
+    return '已清理 $targetName';
+  }
+
+  @override
+  String storageSpaceClearFailed(String error) {
+    return '清理失败：$error';
+  }
+
+  @override
+  String get storageSpaceClearAvatarCacheButton => '清理头像缓存';
+
+  @override
+  String get storageSpaceClearCacheButton => '清理缓存';
+
+  @override
+  String get storageSpaceClearLogsButton => '清理日志';
+
+  @override
+  String get storageSpaceDeleteConfirmTitle => '确认删除';
+
+  @override
+  String storageSpaceDeleteUploadsConfirmMessage(int count) {
+    return '删除 $count 个项目？删除后聊天记录中的附件可能无法打开。';
+  }
+
+  @override
+  String storageSpaceDeletedUploadsDone(int count) {
+    return '已删除 $count 个项目';
+  }
+
+  @override
+  String get storageSpaceNoUploads => '暂无内容';
+
+  @override
+  String get storageSpaceSelectAll => '全选';
+
+  @override
+  String get storageSpaceClearSelection => '清空选择';
+
+  @override
+  String storageSpaceSelectedCount(int count) {
+    return '已选 $count 项';
+  }
+
+  @override
+  String storageSpaceUploadsCount(int count) {
+    return '共 $count 项';
+  }
+
+  @override
   String get settingsPageAboutSection => '关于';
 
   @override
@@ -533,6 +685,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get desktopNavTranslateTooltip => '翻译';
 
   @override
+  String get desktopNavStorageTooltip => '存储';
+
+  @override
   String get desktopNavThemeToggleTooltip => '主题切换';
 
   @override
@@ -818,7 +973,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get assistantEditMessageTemplateTitle => '聊天内容模板';
 
   @override
-  String get assistantEditVariableRole => '角色';
+  String get assistantEditVariableRole => '助手';
 
   @override
   String get assistantEditVariableMessage => '内容';
@@ -1102,6 +1257,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get backupPageImportFromCherryStudio => '从 Cherry Studio 导入';
+
+  @override
+  String get backupPageImportFromChatbox => '从 Chatbox 导入';
 
   @override
   String get chatHistoryPageTitle => '聊天历史';
@@ -1823,6 +1981,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get defaultModelPageTitleModelSubtitle => '用于总结对话标题的模型，推荐使用快速且便宜的模型';
 
   @override
+  String get defaultModelPageSummaryModelTitle => '摘要模型';
+
+  @override
+  String get defaultModelPageSummaryModelSubtitle => '用于生成对话摘要的模型，推荐使用快速且便宜的模型';
+
+  @override
   String get defaultModelPageTranslateModelTitle => '翻译模型';
 
   @override
@@ -1842,6 +2006,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get defaultModelPageTitlePromptHint => '输入用于标题总结的提示词模板';
 
   @override
+  String get defaultModelPageSummaryPromptHint => '输入用于生成摘要的提示词模板';
+
+  @override
   String get defaultModelPageTranslatePromptHint => '输入用于翻译的提示词模板';
 
   @override
@@ -1856,6 +2023,14 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String defaultModelPageTitleVars(String contentVar, String localeVar) {
     return '变量: 对话内容: $contentVar, 语言: $localeVar';
+  }
+
+  @override
+  String defaultModelPageSummaryVars(
+    String previousSummaryVar,
+    String userMessagesVar,
+  ) {
+    return '变量：旧摘要：$previousSummaryVar，新消息：$userMessagesVar';
   }
 
   @override
@@ -1892,6 +2067,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modelDetailSheetAdvancedTab => '高级设置';
+
+  @override
+  String get modelDetailSheetBuiltinToolsTab => '内置工具';
 
   @override
   String get modelDetailSheetModelIdLabel => '模型 ID';
@@ -1960,8 +2138,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modelDetailSheetAddBody => '添加 Body';
 
   @override
-  String get modelDetailSheetBuiltinToolsDescription =>
-      '内置工具仅支持部分 API（例如 Gemini 官方 API）（暂未实现）。';
+  String get modelDetailSheetBuiltinToolsDescription => '内置工具仅支持官方 API。';
+
+  @override
+  String get modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint =>
+      '代码执行无法与搜索/URL 上下文/MCP 工具共存。';
+
+  @override
+  String get modelDetailSheetBuiltinToolsUnsupportedHint => '当前供应商不支持这些内置工具。';
 
   @override
   String get modelDetailSheetSearchTool => '搜索';
@@ -1976,6 +2160,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modelDetailSheetUrlContextToolDescription => '启用 URL 内容处理';
 
   @override
+  String get modelDetailSheetCodeExecutionTool => '代码执行';
+
+  @override
+  String get modelDetailSheetCodeExecutionToolDescription => '启用代码执行工具';
+
+  @override
+  String get modelDetailSheetYoutubeTool => 'YouTube';
+
+  @override
+  String get modelDetailSheetYoutubeToolDescription =>
+      '启用 YouTube 链接读取（自动识别提示词中的链接）';
+
+  @override
+  String get modelDetailSheetOpenaiBuiltinToolsResponsesOnlyHint =>
+      '需要启用 OpenAI Responses API。';
+
+  @override
+  String get modelDetailSheetOpenaiCodeInterpreterTool => '代码解释器';
+
+  @override
+  String get modelDetailSheetOpenaiCodeInterpreterToolDescription =>
+      '启用代码解释器工具（容器自动，内存上限 4g）';
+
+  @override
+  String get modelDetailSheetOpenaiImageGenerationTool => '图像生成';
+
+  @override
+  String get modelDetailSheetOpenaiImageGenerationToolDescription => '启用图像生成工具';
+
+  @override
   String get modelDetailSheetCancelButton => '取消';
 
   @override
@@ -1985,7 +2199,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modelDetailSheetConfirmButton => '确认';
 
   @override
-  String get modelDetailSheetInvalidIdError => '请输入有效的模型 ID（不少于2个字符且不含空格）';
+  String get modelDetailSheetInvalidIdError => '请输入有效的模型 ID（不少于2个字符）';
 
   @override
   String get modelDetailSheetModelIdExistsError => '模型 ID 已存在';
@@ -2502,9 +2716,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchSettingsSheetNoServicesMessage => '暂无可用服务，请先在\"搜索服务\"中添加';
 
   @override
-  String get aboutPageEasterEggTitle => '彩蛋已解锁！';
-
-  @override
   String get aboutPageEasterEggMessage => '\n（好吧现在还没彩蛋）';
 
   @override
@@ -2587,6 +2798,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get displaySettingsPageShowChatListDateSubtitle => '在左侧对话列表中显示日期分组标签';
 
   @override
+  String get displaySettingsPageKeepSidebarOpenOnAssistantTapTitle =>
+      '点选助手时不自动关闭侧边栏';
+
+  @override
+  String get displaySettingsPageKeepSidebarOpenOnTopicTapTitle =>
+      '点选话题时不自动关闭侧边栏';
+
+  @override
+  String get displaySettingsPageKeepAssistantListExpandedOnSidebarCloseTitle =>
+      '关闭侧边栏时不折叠助手列表';
+
+  @override
   String get displaySettingsPageShowUpdatesTitle => '显示更新';
 
   @override
@@ -2630,6 +2853,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get displaySettingsPageNewChatOnLaunchTitle => '启动时新建对话';
+
+  @override
+  String get displaySettingsPageEnterToSendTitle => '回车键发送消息';
+
+  @override
+  String get displaySettingsPageSendShortcutTitle => '发送快捷键';
+
+  @override
+  String get displaySettingsPageSendShortcutEnter => 'Enter';
+
+  @override
+  String get displaySettingsPageSendShortcutCtrlEnter => 'Ctrl/Cmd + Enter';
 
   @override
   String get displaySettingsPageAutoSwitchTopicsTitle => '自动切换话题';
@@ -3334,6 +3569,52 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get providerDetailPageDeleteAllModelsWarning => '此操作不可撤回';
+
+  @override
+  String get requestLogSettingTitle => '请求日志打印';
+
+  @override
+  String get requestLogSettingSubtitle => '开启后会将请求/响应详情写入 logs/logs.txt';
+
+  @override
+  String get flutterLogSettingTitle => '应用日志打印';
+
+  @override
+  String get flutterLogSettingSubtitle =>
+      '开启后会将 Flutter 错误与 print 输出写入 logs/flutter_logs.txt';
+
+  @override
+  String get logViewerTitle => '请求日志';
+
+  @override
+  String get logViewerEmpty => '暂无日志';
+
+  @override
+  String get logViewerCurrentLog => '当前日志';
+
+  @override
+  String get logViewerExport => '导出';
+
+  @override
+  String get logViewerOpenFolder => '打开日志目录';
+
+  @override
+  String get assistantEditManageSummariesTitle => '管理摘要';
+
+  @override
+  String get assistantEditSummaryEmpty => '暂无摘要';
+
+  @override
+  String get assistantEditSummaryDialogTitle => '编辑摘要';
+
+  @override
+  String get assistantEditSummaryDialogHint => '输入摘要内容';
+
+  @override
+  String get assistantEditDeleteSummaryTitle => '清除摘要';
+
+  @override
+  String get assistantEditDeleteSummaryContent => '确定要清除此摘要吗？';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -3421,6 +3702,158 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   @override
   String settingsPageFilesCount(int count, String size) {
     return '共 $count 个文件 · $size';
+  }
+
+  @override
+  String get storageSpacePageTitle => '存储空间';
+
+  @override
+  String get storageSpaceRefreshTooltip => '刷新';
+
+  @override
+  String get storageSpaceLoadFailed => '加载失败';
+
+  @override
+  String get storageSpaceTotalLabel => '已用空间';
+
+  @override
+  String storageSpaceClearableLabel(String size) {
+    return '可清理：$size';
+  }
+
+  @override
+  String storageSpaceClearableHint(String size) {
+    return '共发现可清理空间 $size';
+  }
+
+  @override
+  String get storageSpaceCategoryImages => '图片';
+
+  @override
+  String get storageSpaceCategoryFiles => '文件';
+
+  @override
+  String get storageSpaceCategoryChatData => '聊天记录';
+
+  @override
+  String get storageSpaceCategoryAssistantData => '助手';
+
+  @override
+  String get storageSpaceCategoryCache => '缓存';
+
+  @override
+  String get storageSpaceCategoryLogs => '日志';
+
+  @override
+  String get storageSpaceCategoryOther => '应用';
+
+  @override
+  String storageSpaceFilesCount(int count) {
+    return '$count 个文件';
+  }
+
+  @override
+  String get storageSpaceSafeToClearHint => '可安全清理，不影响聊天记录。';
+
+  @override
+  String get storageSpaceNotSafeToClearHint => '可能影响聊天记录，请谨慎删除。';
+
+  @override
+  String get storageSpaceBreakdownTitle => '明细';
+
+  @override
+  String get storageSpaceSubChatMessages => '消息';
+
+  @override
+  String get storageSpaceSubChatConversations => '会话';
+
+  @override
+  String get storageSpaceSubChatToolEvents => '工具事件';
+
+  @override
+  String get storageSpaceSubAssistantAvatars => '头像';
+
+  @override
+  String get storageSpaceSubAssistantImages => '图片';
+
+  @override
+  String get storageSpaceSubCacheAvatars => '头像缓存';
+
+  @override
+  String get storageSpaceSubCacheOther => '其他缓存';
+
+  @override
+  String get storageSpaceSubCacheSystem => '系统缓存';
+
+  @override
+  String get storageSpaceSubLogsFlutter => '运行日志';
+
+  @override
+  String get storageSpaceSubLogsRequests => '网络日志';
+
+  @override
+  String get storageSpaceSubLogsOther => '其他日志';
+
+  @override
+  String get storageSpaceClearConfirmTitle => '确认清理';
+
+  @override
+  String storageSpaceClearConfirmMessage(String targetName) {
+    return '确定要清理 $targetName 吗？';
+  }
+
+  @override
+  String get storageSpaceClearButton => '清理';
+
+  @override
+  String storageSpaceClearDone(String targetName) {
+    return '已清理 $targetName';
+  }
+
+  @override
+  String storageSpaceClearFailed(String error) {
+    return '清理失败：$error';
+  }
+
+  @override
+  String get storageSpaceClearAvatarCacheButton => '清理头像缓存';
+
+  @override
+  String get storageSpaceClearCacheButton => '清理缓存';
+
+  @override
+  String get storageSpaceClearLogsButton => '清理日志';
+
+  @override
+  String get storageSpaceDeleteConfirmTitle => '确认删除';
+
+  @override
+  String storageSpaceDeleteUploadsConfirmMessage(int count) {
+    return '删除 $count 个项目？删除后聊天记录中的附件可能无法打开。';
+  }
+
+  @override
+  String storageSpaceDeletedUploadsDone(int count) {
+    return '已删除 $count 个项目';
+  }
+
+  @override
+  String get storageSpaceNoUploads => '暂无内容';
+
+  @override
+  String get storageSpaceSelectAll => '全选';
+
+  @override
+  String get storageSpaceClearSelection => '清空选择';
+
+  @override
+  String storageSpaceSelectedCount(int count) {
+    return '已选 $count 项';
+  }
+
+  @override
+  String storageSpaceUploadsCount(int count) {
+    return '共 $count 项';
   }
 
   @override
@@ -3863,6 +4296,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get desktopNavTranslateTooltip => '翻译';
+
+  @override
+  String get desktopNavStorageTooltip => '存储';
 
   @override
   String get desktopNavThemeToggleTooltip => '主题切换';
@@ -4434,6 +4870,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get backupPageImportFromCherryStudio => '从 Cherry Studio 导入';
+
+  @override
+  String get backupPageImportFromChatbox => '从 Chatbox 导入';
 
   @override
   String get chatHistoryPageTitle => '聊天历史';
@@ -5226,6 +5665,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get modelDetailSheetAdvancedTab => '高级设置';
 
   @override
+  String get modelDetailSheetBuiltinToolsTab => '内置工具';
+
+  @override
   String get modelDetailSheetModelIdLabel => '模型 ID';
 
   @override
@@ -5292,8 +5734,14 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get modelDetailSheetAddBody => '添加 Body';
 
   @override
-  String get modelDetailSheetBuiltinToolsDescription =>
-      '内置工具仅支持部分 API（例如 Gemini 官方 API）（暂未实现）。';
+  String get modelDetailSheetBuiltinToolsDescription => '内置工具仅支持官方 API。';
+
+  @override
+  String get modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint =>
+      '代码执行无法与搜索/URL 上下文/MCP 工具共存。';
+
+  @override
+  String get modelDetailSheetBuiltinToolsUnsupportedHint => '当前供应商不支持这些内置工具。';
 
   @override
   String get modelDetailSheetSearchTool => '搜索';
@@ -5308,6 +5756,36 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get modelDetailSheetUrlContextToolDescription => '启用 URL 内容处理';
 
   @override
+  String get modelDetailSheetCodeExecutionTool => '代码执行';
+
+  @override
+  String get modelDetailSheetCodeExecutionToolDescription => '启用代码执行工具';
+
+  @override
+  String get modelDetailSheetYoutubeTool => 'YouTube';
+
+  @override
+  String get modelDetailSheetYoutubeToolDescription =>
+      '启用 YouTube 链接读取（自动识别提示词中的链接）';
+
+  @override
+  String get modelDetailSheetOpenaiBuiltinToolsResponsesOnlyHint =>
+      '需要启用 OpenAI Responses API。';
+
+  @override
+  String get modelDetailSheetOpenaiCodeInterpreterTool => '代码解释器';
+
+  @override
+  String get modelDetailSheetOpenaiCodeInterpreterToolDescription =>
+      '启用代码解释器工具（容器自动，内存上限 4g）';
+
+  @override
+  String get modelDetailSheetOpenaiImageGenerationTool => '图像生成';
+
+  @override
+  String get modelDetailSheetOpenaiImageGenerationToolDescription => '启用图像生成工具';
+
+  @override
   String get modelDetailSheetCancelButton => '取消';
 
   @override
@@ -5317,7 +5795,7 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get modelDetailSheetConfirmButton => '确认';
 
   @override
-  String get modelDetailSheetInvalidIdError => '请输入有效的模型 ID（不少于2个字符且不含空格）';
+  String get modelDetailSheetInvalidIdError => '请输入有效的模型 ID（不少于2个字符）';
 
   @override
   String get modelDetailSheetModelIdExistsError => '模型 ID 已存在';
@@ -5834,9 +6312,6 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get searchSettingsSheetNoServicesMessage => '暂无可用服务，请先在\"搜索服务\"中添加';
 
   @override
-  String get aboutPageEasterEggTitle => '彩蛋已解锁！';
-
-  @override
   String get aboutPageEasterEggMessage => '\n（好吧现在还没彩蛋）';
 
   @override
@@ -5919,6 +6394,18 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get displaySettingsPageShowChatListDateSubtitle => '在左侧对话列表中显示日期分组标签';
 
   @override
+  String get displaySettingsPageKeepSidebarOpenOnAssistantTapTitle =>
+      '点选助手时不自动关闭侧边栏';
+
+  @override
+  String get displaySettingsPageKeepSidebarOpenOnTopicTapTitle =>
+      '点选话题时不自动关闭侧边栏';
+
+  @override
+  String get displaySettingsPageKeepAssistantListExpandedOnSidebarCloseTitle =>
+      '关闭侧边栏时不折叠助手列表';
+
+  @override
   String get displaySettingsPageShowUpdatesTitle => '显示更新';
 
   @override
@@ -5962,6 +6449,18 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get displaySettingsPageNewChatOnLaunchTitle => '启动时新建对话';
+
+  @override
+  String get displaySettingsPageEnterToSendTitle => '回车键发送消息';
+
+  @override
+  String get displaySettingsPageSendShortcutTitle => '发送快捷键';
+
+  @override
+  String get displaySettingsPageSendShortcutEnter => 'Enter';
+
+  @override
+  String get displaySettingsPageSendShortcutCtrlEnter => 'Ctrl/Cmd + Enter';
 
   @override
   String get displaySettingsPageAutoSwitchTopicsTitle => '自动切换话题';
@@ -6666,6 +7165,34 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get providerDetailPageDeleteAllModelsWarning => '此操作不可撤回';
+
+  @override
+  String get requestLogSettingTitle => '请求日志打印';
+
+  @override
+  String get requestLogSettingSubtitle => '开启后会将请求/响应详情写入 logs/logs.txt';
+
+  @override
+  String get flutterLogSettingTitle => '应用日志打印';
+
+  @override
+  String get flutterLogSettingSubtitle =>
+      '开启后会将 Flutter 错误与 print 输出写入 logs/flutter_logs.txt';
+
+  @override
+  String get logViewerTitle => '请求日志';
+
+  @override
+  String get logViewerEmpty => '暂无日志';
+
+  @override
+  String get logViewerCurrentLog => '当前日志';
+
+  @override
+  String get logViewerExport => '导出';
+
+  @override
+  String get logViewerOpenFolder => '打开日志目录';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -6753,6 +7280,158 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String settingsPageFilesCount(int count, String size) {
     return '共 $count 個檔案 · $size';
+  }
+
+  @override
+  String get storageSpacePageTitle => '儲存空間';
+
+  @override
+  String get storageSpaceRefreshTooltip => '重新整理';
+
+  @override
+  String get storageSpaceLoadFailed => '載入失敗';
+
+  @override
+  String get storageSpaceTotalLabel => '已用空間';
+
+  @override
+  String storageSpaceClearableLabel(String size) {
+    return '可清理：$size';
+  }
+
+  @override
+  String storageSpaceClearableHint(String size) {
+    return '共發現可清理空間 $size';
+  }
+
+  @override
+  String get storageSpaceCategoryImages => '圖片';
+
+  @override
+  String get storageSpaceCategoryFiles => '檔案';
+
+  @override
+  String get storageSpaceCategoryChatData => '聊天記錄';
+
+  @override
+  String get storageSpaceCategoryAssistantData => '助理';
+
+  @override
+  String get storageSpaceCategoryCache => '快取';
+
+  @override
+  String get storageSpaceCategoryLogs => '日誌';
+
+  @override
+  String get storageSpaceCategoryOther => '應用';
+
+  @override
+  String storageSpaceFilesCount(int count) {
+    return '$count 個檔案';
+  }
+
+  @override
+  String get storageSpaceSafeToClearHint => '可安全清理，不影響聊天記錄。';
+
+  @override
+  String get storageSpaceNotSafeToClearHint => '可能影響聊天記錄，請謹慎刪除。';
+
+  @override
+  String get storageSpaceBreakdownTitle => '明細';
+
+  @override
+  String get storageSpaceSubChatMessages => '訊息';
+
+  @override
+  String get storageSpaceSubChatConversations => '對話';
+
+  @override
+  String get storageSpaceSubChatToolEvents => '工具事件';
+
+  @override
+  String get storageSpaceSubAssistantAvatars => '頭像';
+
+  @override
+  String get storageSpaceSubAssistantImages => '圖片';
+
+  @override
+  String get storageSpaceSubCacheAvatars => '頭像快取';
+
+  @override
+  String get storageSpaceSubCacheOther => '其他快取';
+
+  @override
+  String get storageSpaceSubCacheSystem => '系統快取';
+
+  @override
+  String get storageSpaceSubLogsFlutter => '執行日誌';
+
+  @override
+  String get storageSpaceSubLogsRequests => '網路日誌';
+
+  @override
+  String get storageSpaceSubLogsOther => '其他日誌';
+
+  @override
+  String get storageSpaceClearConfirmTitle => '確認清理';
+
+  @override
+  String storageSpaceClearConfirmMessage(String targetName) {
+    return '確定要清理 $targetName 嗎？';
+  }
+
+  @override
+  String get storageSpaceClearButton => '清理';
+
+  @override
+  String storageSpaceClearDone(String targetName) {
+    return '已清理 $targetName';
+  }
+
+  @override
+  String storageSpaceClearFailed(String error) {
+    return '清理失敗：$error';
+  }
+
+  @override
+  String get storageSpaceClearAvatarCacheButton => '清理頭像快取';
+
+  @override
+  String get storageSpaceClearCacheButton => '清理快取';
+
+  @override
+  String get storageSpaceClearLogsButton => '清理日誌';
+
+  @override
+  String get storageSpaceDeleteConfirmTitle => '確認刪除';
+
+  @override
+  String storageSpaceDeleteUploadsConfirmMessage(int count) {
+    return '刪除 $count 個項目？刪除後聊天記錄中的附件可能無法開啟。';
+  }
+
+  @override
+  String storageSpaceDeletedUploadsDone(int count) {
+    return '已刪除 $count 個項目';
+  }
+
+  @override
+  String get storageSpaceNoUploads => '暫無內容';
+
+  @override
+  String get storageSpaceSelectAll => '全選';
+
+  @override
+  String get storageSpaceClearSelection => '清除選取';
+
+  @override
+  String storageSpaceSelectedCount(int count) {
+    return '已選 $count 項';
+  }
+
+  @override
+  String storageSpaceUploadsCount(int count) {
+    return '共 $count 項';
   }
 
   @override
@@ -7195,6 +7874,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get desktopNavTranslateTooltip => '翻譯';
+
+  @override
+  String get desktopNavStorageTooltip => '儲存';
 
   @override
   String get desktopNavThemeToggleTooltip => '主題切換';
@@ -7766,6 +8448,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get backupPageImportFromCherryStudio => '從 Cherry Studio 匯入';
+
+  @override
+  String get backupPageImportFromChatbox => '從 Chatbox 匯入';
 
   @override
   String get chatHistoryPageTitle => '聊天歷史';
@@ -8486,6 +9171,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get defaultModelPageTitleModelSubtitle => '用於總結對話標題的模型，推薦使用快速且便宜的模型';
 
   @override
+  String get defaultModelPageSummaryModelTitle => '摘要模型';
+
+  @override
+  String get defaultModelPageSummaryModelSubtitle => '用於生成對話摘要的模型，推薦使用快速且便宜的模型';
+
+  @override
   String get defaultModelPageTranslateModelTitle => '翻譯模型';
 
   @override
@@ -8505,6 +9196,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get defaultModelPageTitlePromptHint => '輸入用於標題總結的提示詞範本';
 
   @override
+  String get defaultModelPageSummaryPromptHint => '輸入用於生成摘要的提示詞範本';
+
+  @override
   String get defaultModelPageTranslatePromptHint => '輸入用於翻譯的提示詞範本';
 
   @override
@@ -8519,6 +9213,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   @override
   String defaultModelPageTitleVars(String contentVar, String localeVar) {
     return '變數: 對話內容: $contentVar, 語言: $localeVar';
+  }
+
+  @override
+  String defaultModelPageSummaryVars(
+    String previousSummaryVar,
+    String userMessagesVar,
+  ) {
+    return '變數：舊摘要：$previousSummaryVar，新訊息：$userMessagesVar';
   }
 
   @override
@@ -8555,6 +9257,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modelDetailSheetAdvancedTab => '進階設定';
+
+  @override
+  String get modelDetailSheetBuiltinToolsTab => '內建工具';
 
   @override
   String get modelDetailSheetModelIdLabel => '模型 ID';
@@ -8623,8 +9328,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get modelDetailSheetAddBody => '新增 Body';
 
   @override
-  String get modelDetailSheetBuiltinToolsDescription =>
-      '內建工具僅支援部分 API（例如 Gemini 官方 API）（暫未實現）。';
+  String get modelDetailSheetBuiltinToolsDescription => '內建工具僅支援官方 API。';
+
+  @override
+  String get modelDetailSheetGeminiCodeExecutionMutuallyExclusiveHint =>
+      '程式碼執行無法與搜尋/URL 上下文/MCP 工具共存。';
+
+  @override
+  String get modelDetailSheetBuiltinToolsUnsupportedHint => '目前供應商不支援這些內建工具。';
 
   @override
   String get modelDetailSheetSearchTool => '搜尋';
@@ -8639,6 +9350,36 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get modelDetailSheetUrlContextToolDescription => '啟用 URL 內容處理';
 
   @override
+  String get modelDetailSheetCodeExecutionTool => '程式碼執行';
+
+  @override
+  String get modelDetailSheetCodeExecutionToolDescription => '啟用程式碼執行工具';
+
+  @override
+  String get modelDetailSheetYoutubeTool => 'YouTube';
+
+  @override
+  String get modelDetailSheetYoutubeToolDescription =>
+      '啟用 YouTube 連結讀取（自動辨識提示詞中的連結）';
+
+  @override
+  String get modelDetailSheetOpenaiBuiltinToolsResponsesOnlyHint =>
+      '需要啟用 OpenAI Responses API。';
+
+  @override
+  String get modelDetailSheetOpenaiCodeInterpreterTool => '程式碼解譯器';
+
+  @override
+  String get modelDetailSheetOpenaiCodeInterpreterToolDescription =>
+      '啟用程式碼解譯器工具（容器自動，記憶體上限 4g）';
+
+  @override
+  String get modelDetailSheetOpenaiImageGenerationTool => '圖像生成';
+
+  @override
+  String get modelDetailSheetOpenaiImageGenerationToolDescription => '啟用圖像生成工具';
+
+  @override
   String get modelDetailSheetCancelButton => '取消';
 
   @override
@@ -8648,7 +9389,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get modelDetailSheetConfirmButton => '確認';
 
   @override
-  String get modelDetailSheetInvalidIdError => '請輸入有效的模型 ID（不少於2個字元且不含空格）';
+  String get modelDetailSheetInvalidIdError => '請輸入有效的模型 ID（不少於2個字元）';
 
   @override
   String get modelDetailSheetModelIdExistsError => '模型 ID 已存在';
@@ -9164,9 +9905,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get searchSettingsSheetNoServicesMessage => '暫無可用服務，請先在\"搜尋服務\"中新增';
 
   @override
-  String get aboutPageEasterEggTitle => '彩蛋已解鎖！';
-
-  @override
   String get aboutPageEasterEggMessage => '\n（好吧現在還沒彩蛋）';
 
   @override
@@ -9249,6 +9987,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get displaySettingsPageShowChatListDateSubtitle => '在左側對話列表中顯示日期分組標籤';
 
   @override
+  String get displaySettingsPageKeepSidebarOpenOnAssistantTapTitle =>
+      '點選助手時不自動關閉側邊欄';
+
+  @override
+  String get displaySettingsPageKeepSidebarOpenOnTopicTapTitle =>
+      '點選話題時不自動關閉側邊欄';
+
+  @override
+  String get displaySettingsPageKeepAssistantListExpandedOnSidebarCloseTitle =>
+      '關閉側邊欄時不折疊助手列表';
+
+  @override
   String get displaySettingsPageShowUpdatesTitle => '顯示更新';
 
   @override
@@ -9292,6 +10042,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get displaySettingsPageNewChatOnLaunchTitle => '啟動時新建對話';
+
+  @override
+  String get displaySettingsPageEnterToSendTitle => '回車鍵發送訊息';
+
+  @override
+  String get displaySettingsPageSendShortcutTitle => '發送快捷鍵';
+
+  @override
+  String get displaySettingsPageSendShortcutEnter => 'Enter';
+
+  @override
+  String get displaySettingsPageSendShortcutCtrlEnter => 'Ctrl/Cmd + Enter';
 
   @override
   String get displaySettingsPageAutoSwitchTopicsTitle => '自動切換話題';
@@ -9998,4 +10760,50 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get providerDetailPageDeleteAllModelsWarning => '此操作不可撤回';
+
+  @override
+  String get requestLogSettingTitle => '請求日誌列印';
+
+  @override
+  String get requestLogSettingSubtitle => '開啟後會將請求/回應詳細寫入 logs/logs.txt';
+
+  @override
+  String get flutterLogSettingTitle => 'Flutter日誌列印';
+
+  @override
+  String get flutterLogSettingSubtitle =>
+      '開啟後會將 Flutter 錯誤與 print 輸出寫入 logs/flutter_logs.txt';
+
+  @override
+  String get logViewerTitle => '請求日誌';
+
+  @override
+  String get logViewerEmpty => '暫無日誌';
+
+  @override
+  String get logViewerCurrentLog => '目前日誌';
+
+  @override
+  String get logViewerExport => '匯出';
+
+  @override
+  String get logViewerOpenFolder => '開啟日誌目錄';
+
+  @override
+  String get assistantEditManageSummariesTitle => '管理摘要';
+
+  @override
+  String get assistantEditSummaryEmpty => '暫無摘要';
+
+  @override
+  String get assistantEditSummaryDialogTitle => '編輯摘要';
+
+  @override
+  String get assistantEditSummaryDialogHint => '輸入摘要內容';
+
+  @override
+  String get assistantEditDeleteSummaryTitle => '清除摘要';
+
+  @override
+  String get assistantEditDeleteSummaryContent => '確定要清除此摘要嗎？';
 }

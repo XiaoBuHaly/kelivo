@@ -8,6 +8,8 @@ import 'dart:async';
 import 'dart:convert';
 import '../services/search/search_service.dart';
 import '../services/tts/network_tts.dart';
+import '../services/network/request_logger.dart';
+import '../services/logging/flutter_logger.dart';
 import '../models/api_keys.dart';
 import '../models/backup.dart';
 import '../services/haptics.dart';
@@ -17,6 +19,9 @@ import '../../utils/avatar_cache.dart';
 
 // Desktop: topic list position
 enum DesktopTopicPosition { left, right }
+
+// Desktop: send message shortcut
+enum DesktopSendShortcut { enter, ctrlEnter }
 
 class SettingsProvider extends ChangeNotifier {
   static const String _providersOrderKey = 'providers_order_v1';
@@ -28,6 +33,8 @@ class SettingsProvider extends ChangeNotifier {
   static const String _titlePromptKey = 'title_prompt_v1';
   static const String _ocrModelKey = 'ocr_model_v1';
   static const String _ocrPromptKey = 'ocr_prompt_v1';
+  static const String _summaryModelKey = 'summary_model_v1';
+  static const String _summaryPromptKey = 'summary_prompt_v1';
   static const String _themePaletteKey = 'theme_palette_v1';
   static const String _useDynamicColorKey = 'use_dynamic_color_v1';
   static const String _thinkingBudgetKey = 'thinking_budget_v1';
@@ -47,9 +54,14 @@ class SettingsProvider extends ChangeNotifier {
   static const String _displayHapticsOnListItemTapKey = 'display_haptics_on_list_item_tap_v1';
   static const String _displayHapticsOnCardTapKey = 'display_haptics_on_card_tap_v1';
   static const String _displayShowAppUpdatesKey = 'display_show_app_updates_v1';
+  static const String _displayKeepSidebarOpenOnAssistantTapKey = 'display_keep_sidebar_open_on_assistant_tap_v1';
+  static const String _displayKeepSidebarOpenOnTopicTapKey = 'display_keep_sidebar_open_on_topic_tap_v1';
+  static const String _displayKeepAssistantListExpandedOnSidebarCloseKey = 'display_keep_assistant_list_expanded_on_sidebar_close_v1';
   static const String _displayNewChatOnAssistantSwitchKey = 'display_new_chat_on_assistant_switch_v1';
   static const String _displayNewChatOnLaunchKey = 'display_new_chat_on_launch_v1';
   static const String _displayNewChatAfterDeleteKey = 'display_new_chat_after_delete_v1';
+  static const String _displayEnterToSendOnMobileKey = 'display_enter_to_send_on_mobile_v1';
+  static const String _desktopSendShortcutKey = 'desktop_send_shortcut_v1';
   static const String _displayChatFontScaleKey = 'display_chat_font_scale_v1';
   static const String _displayAutoScrollEnabledKey = 'display_auto_scroll_enabled_v1';
   static const String _displayAutoScrollIdleSecondsKey = 'display_auto_scroll_idle_seconds_v1';
@@ -67,6 +79,10 @@ class SettingsProvider extends ChangeNotifier {
   static const String _displayDesktopMinimizeToTrayOnCloseKey = 'display_desktop_minimize_to_tray_on_close_v1';
   static const String _displayUsePureBackgroundKey = 'display_use_pure_background_v1';
   static const String _displayChatMessageBackgroundStyleKey = 'display_chat_message_background_style_v1';
+  // Network request logging (debug)
+  static const String _requestLogEnabledKey = 'request_log_enabled_v1';
+  // Flutter runtime logging (debug)
+  static const String _flutterLogEnabledKey = 'flutter_log_enabled_v1';
   // Desktop topic panel placement + right sidebar open state
   static const String _desktopTopicPositionKey = 'desktop_topic_position_v1';
   static const String _desktopRightSidebarOpenKey = 'desktop_right_sidebar_open_v1';
@@ -290,6 +306,19 @@ class SettingsProvider extends ChangeNotifier {
     if (_ocrModelProvider == null || _ocrModelId == null) {
       _ocrEnabled = false;
     }
+    // load summary model
+    final summarySel = prefs.getString(_summaryModelKey);
+    if (summarySel != null && summarySel.contains('::')) {
+      final parts = summarySel.split('::');
+      if (parts.length >= 2) {
+        _summaryModelProvider = parts[0];
+        _summaryModelId = parts.sublist(1).join('::');
+      }
+    }
+    // load summary prompt
+    final summaryp = prefs.getString(_summaryPromptKey);
+    _summaryPrompt =
+        (summaryp == null || summaryp.trim().isEmpty) ? defaultSummaryPrompt : summaryp;
     // learning mode
     _learningModeEnabled = prefs.getBool(_learningModeEnabledKey) ?? false;
     final lmp = prefs.getString(_learningModePromptKey);
@@ -316,9 +345,34 @@ class SettingsProvider extends ChangeNotifier {
     // Apply global haptics to service layer
     Haptics.setEnabled(_hapticsGlobalEnabled);
     _showAppUpdates = prefs.getBool(_displayShowAppUpdatesKey) ?? true;
+    _keepSidebarOpenOnAssistantTap = prefs.getBool(_displayKeepSidebarOpenOnAssistantTapKey) ?? false;
+    _keepSidebarOpenOnTopicTap = prefs.getBool(_displayKeepSidebarOpenOnTopicTapKey) ?? false;
+    _keepAssistantListExpandedOnSidebarClose = prefs.getBool(_displayKeepAssistantListExpandedOnSidebarCloseKey) ?? false;
+    _requestLogEnabled = prefs.getBool(_requestLogEnabledKey) ?? false;
+    await RequestLogger.setEnabled(_requestLogEnabled);
+    _flutterLogEnabled = prefs.getBool(_flutterLogEnabledKey) ?? false;
+    await FlutterLogger.setEnabled(_flutterLogEnabled);
     _newChatOnLaunch = prefs.getBool(_displayNewChatOnLaunchKey) ?? true;
     _newChatOnAssistantSwitch = prefs.getBool(_displayNewChatOnAssistantSwitchKey) ?? false;
     _newChatAfterDelete = prefs.getBool(_displayNewChatAfterDeleteKey) ?? false;
+    // Enter to send on mobile: iOS defaults to true, Android defaults to false
+    final enterToSendPref = prefs.getBool(_displayEnterToSendOnMobileKey);
+    if (enterToSendPref == null) {
+      _enterToSendOnMobile = Platform.isIOS;
+      await prefs.setBool(_displayEnterToSendOnMobileKey, _enterToSendOnMobile);
+    } else {
+      _enterToSendOnMobile = enterToSendPref;
+    }
+    // Desktop send shortcut: Enter (default) or Ctrl/Cmd+Enter
+    final sendShortcutStr = prefs.getString(_desktopSendShortcutKey);
+    switch (sendShortcutStr) {
+      case 'ctrlEnter':
+        _desktopSendShortcut = DesktopSendShortcut.ctrlEnter;
+        break;
+      case 'enter':
+      default:
+        _desktopSendShortcut = DesktopSendShortcut.enter;
+    }
     _chatFontScale = prefs.getDouble(_displayChatFontScaleKey) ?? 1.0;
     _autoScrollEnabled = prefs.getBool(_displayAutoScrollEnabledKey) ?? true;
     _autoScrollIdleSeconds = prefs.getInt(_displayAutoScrollIdleSecondsKey) ?? 8;
@@ -1120,6 +1174,12 @@ class SettingsProvider extends ChangeNotifier {
       await prefs.setBool(_ocrEnabledKey, false);
       changed = true;
     }
+    if (_summaryModelProvider == providerKey) {
+      _summaryModelProvider = null;
+      _summaryModelId = null;
+      await prefs.remove(_summaryModelKey);
+      changed = true;
+    }
     if (changed) notifyListeners();
   }
 
@@ -1152,6 +1212,12 @@ class SettingsProvider extends ChangeNotifier {
       _ocrEnabled = false;
       await prefs.remove(_ocrModelKey);
       await prefs.setBool(_ocrEnabledKey, false);
+      changed = true;
+    }
+    if (_summaryModelProvider == providerKey && _summaryModelId == modelId) {
+      _summaryModelProvider = null;
+      _summaryModelId = null;
+      await prefs.remove(_summaryModelKey);
       changed = true;
     }
     // Also remove from pinned if applicable
@@ -1193,6 +1259,11 @@ class SettingsProvider extends ChangeNotifier {
       _ocrEnabled = false;
       await prefs.remove(_ocrModelKey);
       await prefs.setBool(_ocrEnabledKey, false);
+    }
+    if (_summaryModelProvider == key) {
+      _summaryModelProvider = null;
+      _summaryModelId = null;
+      await prefs.remove(_summaryModelKey);
     }
 
     // Remove pinned models for this provider
@@ -1428,6 +1499,63 @@ Do not interpret or translate—only transcribe and describe what is visually pr
     await prefs.setBool(_ocrEnabledKey, _ocrEnabled);
   }
 
+  // Summary model and prompt
+  String? _summaryModelProvider;
+  String? _summaryModelId;
+  String? get summaryModelProvider => _summaryModelProvider;
+  String? get summaryModelId => _summaryModelId;
+  String? get summaryModelKey =>
+      (_summaryModelProvider != null && _summaryModelId != null)
+          ? '${_summaryModelProvider!}::${_summaryModelId!}'
+          : null;
+
+  static const String defaultSummaryPrompt =
+      '''I will give you user messages from a conversation in the `<messages>` block.
+Generate or update a brief summary of the user's questions and intentions.
+
+1. The summary should be in the same language as the user messages
+2. Focus on the user's core questions and intentions
+3. Keep it under 100 characters
+4. Output the summary directly without any prefix
+5. If a previous summary exists, incorporate it with the new messages
+
+<previous_summary>
+{previous_summary}
+</previous_summary>
+
+<messages>
+{user_messages}
+</messages>''';
+
+  String _summaryPrompt = defaultSummaryPrompt;
+  String get summaryPrompt => _summaryPrompt;
+
+  Future<void> setSummaryModel(String providerKey, String modelId) async {
+    _summaryModelProvider = providerKey;
+    _summaryModelId = modelId;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_summaryModelKey, '$providerKey::$modelId');
+  }
+
+  Future<void> resetSummaryModel() async {
+    _summaryModelProvider = null;
+    _summaryModelId = null;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_summaryModelKey);
+  }
+
+  Future<void> setSummaryPrompt(String prompt) async {
+    _summaryPrompt = prompt.trim().isEmpty ? defaultSummaryPrompt : prompt;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_summaryPromptKey, _summaryPrompt);
+  }
+
+  Future<void> resetSummaryPrompt() async =>
+      setSummaryPrompt(defaultSummaryPrompt);
+
   // Learning Mode
   bool _learningModeEnabled = false;
   bool get learningModeEnabled => _learningModeEnabled;
@@ -1628,6 +1756,29 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_displayNewChatAfterDeleteKey, v);
+  }
+
+  // Display: enter key sends message on mobile (iOS defaults true, Android defaults false)
+  bool _enterToSendOnMobile = false;
+  bool get enterToSendOnMobile => _enterToSendOnMobile;
+  Future<void> setEnterToSendOnMobile(bool v) async {
+    if (_enterToSendOnMobile == v) return;
+    _enterToSendOnMobile = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_displayEnterToSendOnMobileKey, v);
+  }
+
+  // Desktop: send shortcut (Enter or Ctrl/Cmd+Enter)
+  DesktopSendShortcut _desktopSendShortcut = DesktopSendShortcut.enter;
+  DesktopSendShortcut get desktopSendShortcut => _desktopSendShortcut;
+  Future<void> setDesktopSendShortcut(DesktopSendShortcut v) async {
+    if (_desktopSendShortcut == v) return;
+    _desktopSendShortcut = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    final str = v == DesktopSendShortcut.ctrlEnter ? 'ctrlEnter' : 'enter';
+    await prefs.setString(_desktopSendShortcutKey, str);
   }
 
   // Display: chat font scale (0.5 - 1.5, default 1.0)
@@ -1883,6 +2034,63 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     await prefs.setBool(_displayShowAppUpdatesKey, v);
   }
 
+  // Display: keep sidebar open when selecting assistant (mobile)
+  bool _keepSidebarOpenOnAssistantTap = false;
+  bool get keepSidebarOpenOnAssistantTap => _keepSidebarOpenOnAssistantTap;
+  Future<void> setKeepSidebarOpenOnAssistantTap(bool v) async {
+    if (_keepSidebarOpenOnAssistantTap == v) return;
+    _keepSidebarOpenOnAssistantTap = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_displayKeepSidebarOpenOnAssistantTapKey, v);
+  }
+
+  // Display: keep sidebar open when switching topics (mobile)
+  bool _keepSidebarOpenOnTopicTap = false;
+  bool get keepSidebarOpenOnTopicTap => _keepSidebarOpenOnTopicTap;
+  Future<void> setKeepSidebarOpenOnTopicTap(bool v) async {
+    if (_keepSidebarOpenOnTopicTap == v) return;
+    _keepSidebarOpenOnTopicTap = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_displayKeepSidebarOpenOnTopicTapKey, v);
+  }
+
+  // Display: keep assistant list expanded when closing sidebar (mobile)
+  bool _keepAssistantListExpandedOnSidebarClose = false;
+  bool get keepAssistantListExpandedOnSidebarClose => _keepAssistantListExpandedOnSidebarClose;
+  Future<void> setKeepAssistantListExpandedOnSidebarClose(bool v) async {
+    if (_keepAssistantListExpandedOnSidebarClose == v) return;
+    _keepAssistantListExpandedOnSidebarClose = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_displayKeepAssistantListExpandedOnSidebarCloseKey, v);
+  }
+
+  // Network: request logging (debug)
+  bool _requestLogEnabled = false;
+  bool get requestLogEnabled => _requestLogEnabled;
+  Future<void> setRequestLogEnabled(bool v) async {
+    if (_requestLogEnabled == v) return;
+    _requestLogEnabled = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_requestLogEnabledKey, v);
+    await RequestLogger.setEnabled(v);
+  }
+
+  // Flutter: runtime logging (debug)
+  bool _flutterLogEnabled = false;
+  bool get flutterLogEnabled => _flutterLogEnabled;
+  Future<void> setFlutterLogEnabled(bool v) async {
+    if (_flutterLogEnabled == v) return;
+    _flutterLogEnabled = v;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_flutterLogEnabledKey, v);
+    await FlutterLogger.setEnabled(v);
+  }
+
   // Search service settings
   Future<void> setSearchServices(List<SearchServiceOptions> services) async {
     _searchServices = List.from(services);
@@ -1990,6 +2198,11 @@ DO NOT GIVE ANSWERS OR DO HOMEWORK FOR THE USER. If the user asks a math or logi
     copy._hapticsOnListItemTap = _hapticsOnListItemTap;
     copy._hapticsOnCardTap = _hapticsOnCardTap;
     copy._showAppUpdates = _showAppUpdates;
+    copy._keepSidebarOpenOnAssistantTap = _keepSidebarOpenOnAssistantTap;
+    copy._keepSidebarOpenOnTopicTap = _keepSidebarOpenOnTopicTap;
+    copy._keepAssistantListExpandedOnSidebarClose = _keepAssistantListExpandedOnSidebarClose;
+    copy._requestLogEnabled = _requestLogEnabled;
+    copy._flutterLogEnabled = _flutterLogEnabled;
     copy._newChatOnLaunch = _newChatOnLaunch;
     copy._newChatOnAssistantSwitch = _newChatOnAssistantSwitch;
     copy._newChatAfterDelete = _newChatAfterDelete;

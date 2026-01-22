@@ -11,6 +11,7 @@ import '../../chat/widgets/chat_message_widget.dart';
 import '../../chat/widgets/message_more_sheet.dart';
 import '../controllers/stream_controller.dart' as stream_ctrl;
 import '../controllers/streaming_content_notifier.dart';
+import '../utils/chat_layout_constants.dart';
 import 'model_icon.dart';
 
 /// Callback types for message list view actions
@@ -202,31 +203,44 @@ class MessageListView extends StatelessWidget {
       truncCollapsed = count - 1;
     }
 
-    final list = ListView.builder(
-      controller: scrollController,
-      padding: EdgeInsets.only(bottom: isPinnedIndicatorActive ? 28 : 16, top: 8),
-      itemCount: collapsedMessages.length,
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      itemBuilder: (context, index) {
-        if (index < 0 || index >= collapsedMessages.length) {
-          return const SizedBox.shrink();
-        }
-        return _buildMessageItem(
-          context,
-          index: index,
-          messages: collapsedMessages,
-          byGroup: byGroup,
-          truncCollapsed: truncCollapsed,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final horizontalPad =
+            ((constraints.maxWidth - ChatLayoutConstants.maxContentWidth) / 2)
+                .clamp(0.0, double.infinity);
+
+        final list = ListView.builder(
+          controller: scrollController,
+          padding: EdgeInsets.fromLTRB(
+            horizontalPad,
+            8,
+            horizontalPad,
+            isPinnedIndicatorActive ? 28 : 16,
+          ),
+          itemCount: collapsedMessages.length,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          itemBuilder: (context, index) {
+            if (index < 0 || index >= collapsedMessages.length) {
+              return const SizedBox.shrink();
+            }
+            return _buildMessageItem(
+              context,
+              index: index,
+              messages: collapsedMessages,
+              byGroup: byGroup,
+              truncCollapsed: truncCollapsed,
+            );
+          },
+        );
+
+        return Stack(
+          children: [
+            list,
+            if (isPinnedIndicatorActive && buildPinnedStreamingIndicator != null)
+              buildPinnedStreamingIndicator!(),
+          ],
         );
       },
-    );
-
-    return Stack(
-      children: [
-        list,
-        if (isPinnedIndicatorActive && buildPinnedStreamingIndicator != null)
-          buildPinnedStreamingIndicator!(),
-      ],
     );
   }
 
@@ -278,45 +292,53 @@ class MessageListView extends StatelessWidget {
                 ),
               ),
             Expanded(
-              child: MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  textScaleFactor: MediaQuery.of(context).textScaleFactor * chatScale,
-                ),
-                child: isStreaming
-                    ? _buildStreamingMessageWidget(
-                        context,
-                        message: message,
-                        index: index,
-                        messages: messages,
-                        byGroup: byGroup,
-                        r: r,
-                        t: t,
-                        useAssist: useAssist,
-                        assistant: assistant,
-                        showMsgNav: showMsgNav,
-                        gid: gid,
-                        selectedIdx: selectedIdx,
-                        total: total,
-                        effectiveIndex: effectiveIndex,
-                        effectiveTotal: effectiveTotal,
-                      )
-                    : _buildChatMessageWidget(
-                        context,
-                        message: message,
-                        index: index,
-                        messages: messages,
-                        byGroup: byGroup,
-                        r: r,
-                        t: t,
-                        useAssist: useAssist,
-                        assistant: assistant,
-                        showMsgNav: showMsgNav,
-                        gid: gid,
-                        selectedIdx: selectedIdx,
-                        total: total,
-                        effectiveIndex: effectiveIndex,
-                        effectiveTotal: effectiveTotal,
-                      ),
+              child: Builder(
+                builder: (context) {
+                  final textScale = MediaQuery.textScaleFactorOf(context);
+                  final baseMediaQuery = context.getInheritedWidgetOfExactType<MediaQuery>();
+                  final baseData = baseMediaQuery?.data;
+                  return MediaQuery(
+                    // Keep chat font scaling without rebuilding on keyboard insets.
+                    data: (baseData ?? MediaQuery.of(context)).copyWith(
+                      textScaleFactor: textScale * chatScale,
+                    ),
+                    child: isStreaming
+                        ? _buildStreamingMessageWidget(
+                            context,
+                            message: message,
+                            index: index,
+                            messages: messages,
+                            byGroup: byGroup,
+                            r: r,
+                            t: t,
+                            useAssist: useAssist,
+                            assistant: assistant,
+                            showMsgNav: showMsgNav,
+                            gid: gid,
+                            selectedIdx: selectedIdx,
+                            total: total,
+                            effectiveIndex: effectiveIndex,
+                            effectiveTotal: effectiveTotal,
+                          )
+                        : _buildChatMessageWidget(
+                            context,
+                            message: message,
+                            index: index,
+                            messages: messages,
+                            byGroup: byGroup,
+                            r: r,
+                            t: t,
+                            useAssist: useAssist,
+                            assistant: assistant,
+                            showMsgNav: showMsgNav,
+                            gid: gid,
+                            selectedIdx: selectedIdx,
+                            total: total,
+                            effectiveIndex: effectiveIndex,
+                            effectiveTotal: effectiveTotal,
+                          ),
+                  );
+                },
               ),
             ),
           ],
