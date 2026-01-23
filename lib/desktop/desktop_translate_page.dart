@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:re_editor/re_editor.dart';
 
 import '../icons/lucide_adapter.dart' as lucide;
 import '../l10n/app_localizations.dart';
@@ -22,8 +23,8 @@ class DesktopTranslatePage extends StatefulWidget {
 }
 
 class _DesktopTranslatePageState extends State<DesktopTranslatePage> {
-  final TextEditingController _source = TextEditingController();
-  final TextEditingController _output = TextEditingController();
+  final CodeLineEditingController _source = CodeLineEditingController();
+  final CodeLineEditingController _output = CodeLineEditingController();
 
   LanguageOption? _targetLang;
   String? _modelProviderKey;
@@ -268,22 +269,27 @@ class _DesktopTranslatePageState extends State<DesktopTranslatePage> {
                                   icon: lucide.Lucide.Eraser,
                                   label: '清空',
                                   onTap: () {
-                                    _source.clear();
-                                    _output.clear();
+                                    _source.text = '';
+                                    _output.text = '';
                                   },
                                 ),
-                                child: TextField(
+                                child: CodeEditor(
                                   controller: _source,
-                                  keyboardType: TextInputType.multiline,
-                                  maxLines: null,
-                                  expands: true,
-                                  decoration: InputDecoration(
-                                    hintText: l10n.translatePageInputHint,
-                                    border: InputBorder.none,
-                                    isCollapsed: true,
-                                    contentPadding: const EdgeInsets.all(14),
+                                  autofocus: false,
+                                  wordWrap: true,
+                                  indicatorBuilder: null,
+                                  chunkAnalyzer: const NonCodeChunkAnalyzer(),
+                                  hint: l10n.translatePageInputHint,
+                                  padding: const EdgeInsets.all(14),
+                                  style: CodeEditorStyle(
+                                    fontSize: 14.5,
+                                    fontHeight: 1.4,
+                                    textColor: Theme.of(context).colorScheme.onSurface,
+                                    hintTextColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                    cursorColor: Theme.of(context).colorScheme.primary,
+                                    backgroundColor: Colors.transparent,
+                                    selectionColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                                   ),
-                                  style: const TextStyle(fontSize: 14.5, height: 1.4),
                                 ),
                               ),
                             ),
@@ -303,19 +309,24 @@ class _DesktopTranslatePageState extends State<DesktopTranslatePage> {
                                     );
                                   },
                                 ),
-                                child: TextField(
+                                child: CodeEditor(
                                   controller: _output,
                                   readOnly: true,
-                                  keyboardType: TextInputType.multiline,
-                                  maxLines: null,
-                                  expands: true,
-                                  decoration: InputDecoration(
-                                    hintText: l10n.translatePageOutputHint,
-                                    border: InputBorder.none,
-                                    isCollapsed: true,
-                                    contentPadding: const EdgeInsets.all(14),
+                                  autofocus: false,
+                                  wordWrap: true,
+                                  indicatorBuilder: null,
+                                  chunkAnalyzer: const NonCodeChunkAnalyzer(),
+                                  hint: l10n.translatePageOutputHint,
+                                  padding: const EdgeInsets.all(14),
+                                  style: CodeEditorStyle(
+                                    fontSize: 14.5,
+                                    fontHeight: 1.4,
+                                    textColor: Theme.of(context).colorScheme.onSurface,
+                                    hintTextColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                    cursorColor: Theme.of(context).colorScheme.primary,
+                                    backgroundColor: Colors.transparent,
+                                    selectionColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                                   ),
-                                  style: const TextStyle(fontSize: 14.5, height: 1.4),
                                 ),
                               ),
                             ),

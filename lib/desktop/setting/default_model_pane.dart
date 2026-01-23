@@ -7,6 +7,7 @@ import '../../features/model/widgets/model_select_sheet.dart';
 import '../../utils/brand_assets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:characters/characters.dart';
+import '../../shared/widgets/input_height_constraints.dart';
 
 class DesktopDefaultModelPane extends StatelessWidget {
   const DesktopDefaultModelPane({super.key});
@@ -178,6 +179,12 @@ class DesktopDefaultModelPane extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
+        final maxPromptHeight = computeInputMaxHeight(
+          context: ctx,
+          reservedHeight: 220,
+          softCapFraction: 0.6,
+          minHeight: 160,
+        );
         return Dialog(
           backgroundColor: cs.surface,
           shape: RoundedRectangleBorder(
@@ -214,7 +221,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 160),
+                    constraints: BoxConstraints(minHeight: 160, maxHeight: maxPromptHeight),
                     child: TextField(
                       controller: ctrl,
                       maxLines: null,
@@ -275,6 +282,12 @@ class DesktopDefaultModelPane extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
+        final maxPromptHeight = computeInputMaxHeight(
+          context: ctx,
+          reservedHeight: 220,
+          softCapFraction: 0.6,
+          minHeight: 160,
+        );
         return Dialog(
           backgroundColor: cs.surface,
           shape: RoundedRectangleBorder(
@@ -311,7 +324,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 160),
+                    constraints: BoxConstraints(minHeight: 160, maxHeight: maxPromptHeight),
                     child: TextField(
                       controller: ctrl,
                       maxLines: null,
@@ -375,6 +388,12 @@ class DesktopDefaultModelPane extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
+        final maxPromptHeight = computeInputMaxHeight(
+          context: ctx,
+          reservedHeight: 220,
+          softCapFraction: 0.6,
+          minHeight: 160,
+        );
         return Dialog(
           backgroundColor: cs.surface,
           shape: RoundedRectangleBorder(
@@ -411,7 +430,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 160),
+                    constraints: BoxConstraints(minHeight: 160, maxHeight: maxPromptHeight),
                     child: TextField(
                       controller: ctrl,
                       maxLines: null,
@@ -464,6 +483,12 @@ class DesktopDefaultModelPane extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
+        final maxPromptHeight = computeInputMaxHeight(
+          context: ctx,
+          reservedHeight: 220,
+          softCapFraction: 0.6,
+          minHeight: 160,
+        );
         return Dialog(
           backgroundColor: cs.surface,
           shape: RoundedRectangleBorder(
@@ -500,7 +525,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 160),
+                    constraints: BoxConstraints(minHeight: 160, maxHeight: maxPromptHeight),
                     child: TextField(
                       controller: ctrl,
                       maxLines: null,

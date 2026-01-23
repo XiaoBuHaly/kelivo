@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:re_editor/re_editor.dart';
 
 import '../../../icons/lucide_adapter.dart' as lucide;
 import '../../../l10n/app_localizations.dart';
@@ -24,8 +25,8 @@ class TranslatePage extends StatefulWidget {
 }
 
 class _TranslatePageState extends State<TranslatePage> {
-  final TextEditingController _src = TextEditingController();
-  final TextEditingController _dst = TextEditingController();
+  final CodeLineEditingController _src = CodeLineEditingController();
+  final CodeLineEditingController _dst = CodeLineEditingController();
   LanguageOption? _lang;
   String? _providerKey;
   String? _modelId;
@@ -78,7 +79,7 @@ class _TranslatePageState extends State<TranslatePage> {
     final lang = await showLanguageSelector(context);
     if (!mounted || lang == null) return;
     if (lang.code == '__clear__') {
-      setState(() => _dst.clear());
+      setState(() => _dst.text = '');
       return;
     }
     setState(() => _lang = lang);
@@ -186,7 +187,7 @@ class _TranslatePageState extends State<TranslatePage> {
 
   Future<void> _clearAll() async {
     await _stop();
-    setState(() { _src.clear(); _dst.clear(); });
+    setState(() { _src.text = ''; _dst.text = ''; });
   }
 
   @override
@@ -276,19 +277,23 @@ class _TranslatePageState extends State<TranslatePage> {
               child: SizedBox(
                 height: 200,
                 child: _Card(
-                  child: TextField(
+                  child: CodeEditor(
                     controller: _src,
-                    keyboardType: TextInputType.multiline,
-                    expands: true,
-                    maxLines: null,
-                    minLines: null,
-                    decoration: InputDecoration(
-                      hintText: l10n.translatePageInputHint,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                    autofocus: false,
+                    wordWrap: true,
+                    indicatorBuilder: null,
+                    chunkAnalyzer: const NonCodeChunkAnalyzer(),
+                    hint: l10n.translatePageInputHint,
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                    style: CodeEditorStyle(
+                      fontSize: 15,
+                      fontHeight: 1.4,
+                      textColor: Theme.of(context).colorScheme.onSurface,
+                      hintTextColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      cursorColor: Theme.of(context).colorScheme.primary,
+                      backgroundColor: Colors.transparent,
+                      selectionColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                     ),
-                    contextMenuBuilder: (context, editableTextState) => const SizedBox.shrink(),
-                    style: const TextStyle(fontSize: 15, height: 1.4),
                   ),
                 ),
               ),
@@ -298,20 +303,24 @@ class _TranslatePageState extends State<TranslatePage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
                 child: _Card(
-                  child: TextField(
+                  child: CodeEditor(
                     controller: _dst,
                     readOnly: true,
-                    keyboardType: TextInputType.multiline,
-                    maxLines: null,
-                    expands: true,
-                    decoration: InputDecoration(
-                      hintText: l10n.translatePageOutputHint,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                    autofocus: false,
+                    wordWrap: true,
+                    indicatorBuilder: null,
+                    chunkAnalyzer: const NonCodeChunkAnalyzer(),
+                    hint: l10n.translatePageOutputHint,
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                    style: CodeEditorStyle(
+                      fontSize: 15,
+                      fontHeight: 1.4,
+                      textColor: Theme.of(context).colorScheme.onSurface,
+                      hintTextColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      cursorColor: Theme.of(context).colorScheme.primary,
+                      backgroundColor: Colors.transparent,
+                      selectionColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                     ),
-                    enableInteractiveSelection: false,
-                    contextMenuBuilder: (context, editableTextState) => const SizedBox.shrink(),
-                    style: const TextStyle(fontSize: 15, height: 1.4),
                   ),
                 ),
               ),

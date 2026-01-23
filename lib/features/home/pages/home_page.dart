@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show TargetPlatform;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:provider/provider.dart';
+import 'package:re_editor/re_editor.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../../shared/widgets/interactive_drawer.dart';
@@ -65,7 +66,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   final InteractiveDrawerController _drawerController = InteractiveDrawerController();
   final ValueNotifier<int> _assistantPickerCloseTick = ValueNotifier<int>(0);
   final FocusNode _inputFocus = FocusNode();
-  final TextEditingController _inputController = TextEditingController();
+  final CodeLineEditingController _inputController = CodeLineEditingController();
   final ChatInputBarController _mediaController = ChatInputBarController();
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _inputBarKey = GlobalKey();
@@ -174,20 +175,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     if (!mounted) return;
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
-    final current = _inputController.text;
-    final selection = _inputController.selection;
-    final start = (selection.start >= 0 && selection.start <= current.length)
-        ? selection.start
-        : current.length;
-    final end = (selection.end >= 0 && selection.end <= current.length && selection.end >= start)
-        ? selection.end
-        : start;
-    final next = current.replaceRange(start, end, trimmed);
-    _inputController.value = _inputController.value.copyWith(
-      text: next,
-      selection: TextSelection.collapsed(offset: start + trimmed.length),
-      composing: TextRange.empty,
-    );
+    // Use CodeLineEditingController's replaceSelection to insert text at cursor
+    _inputController.replaceSelection(trimmed);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _controller.forceScrollToBottomSoon(animate: false);
@@ -623,7 +612,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       },
       onSend: (text) {
         _controller.sendMessage(text);
-        _inputController.clear();
+        _inputController.text = ''; // Clear the input
         if (PlatformUtils.isMobile) {
           _controller.dismissKeyboard();
         } else {

@@ -12,7 +12,7 @@ class MarkdownPreviewHtmlBuilder {
         .replaceAll('{{ON_BACKGROUND_COLOR}}', _toCssHex(cs.onBackground))
         .replaceAll('{{SURFACE_COLOR}}', _toCssHex(cs.surface))
         .replaceAll('{{ON_SURFACE_COLOR}}', _toCssHex(cs.onSurface))
-        .replaceAll('{{SURFACE_VARIANT_COLOR}}', _toCssHex(cs.surfaceVariant))
+        .replaceAll('{{SURFACE_VARIANT_COLOR}}', _toCssHex(cs.surfaceContainerHighest))
         .replaceAll('{{ON_SURFACE_VARIANT_COLOR}}', _toCssHex(cs.onSurfaceVariant))
         .replaceAll('{{PRIMARY_COLOR}}', _toCssHex(cs.primary))
         .replaceAll('{{OUTLINE_COLOR}}', _toCssHex(cs.outline))
@@ -20,12 +20,18 @@ class MarkdownPreviewHtmlBuilder {
   }
 
   static String _toCssHex(Color c) {
-    final a = c.alpha.toRadixString(16).padLeft(2, '0').toUpperCase();
-    final r = c.red.toRadixString(16).padLeft(2, '0').toUpperCase();
-    final g = c.green.toRadixString(16).padLeft(2, '0').toUpperCase();
-    final b = c.blue.toRadixString(16).padLeft(2, '0').toUpperCase();
+    final a = _toHex(_to8Bit(c.a));
+    final r = _toHex(_to8Bit(c.r));
+    final g = _toHex(_to8Bit(c.g));
+    final b = _toHex(_to8Bit(c.b));
     return '#$r$g$b$a';
   }
+
+  static String _toHex(int value) =>
+      value.toRadixString(16).padLeft(2, '0').toUpperCase();
+
+  static int _to8Bit(double value) =>
+      (value * 255.0).round().clamp(0, 255).toInt();
 }
 
 extension Base64X on String {

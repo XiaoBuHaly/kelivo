@@ -16,6 +16,7 @@ import '../core/providers/model_provider.dart';
 import 'model_fetch_dialog.dart' show showModelFetchDialog;
 import '../shared/widgets/ios_switch.dart';
 import '../shared/widgets/ios_checkbox.dart';
+import '../shared/widgets/input_height_constraints.dart';
 // Desktop assistants panel dependencies
 import '../features/assistant/pages/assistant_settings_edit_page.dart' show showAssistantDesktopDialog; // dialog opener only
 import '../core/providers/assistant_provider.dart';
@@ -1686,29 +1687,39 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
                 const SizedBox(height: 14),
                 _sectionLabel(context, l10n.providerDetailPageServiceAccountJsonLabel, bold: true),
                 const SizedBox(height: 6),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: 120),
-                  child: Focus(
-                    onFocusChange: (has) async {
-                      if (!has) {
-                        final v = _saJsonCtrl.text;
-                        final old = sp.getProviderConfig(widget.providerKey, defaultName: widget.displayName);
-                        await sp.setProviderConfig(widget.providerKey, old.copyWith(serviceAccountJson: v));
-                      }
-                    },
-                    child: TextField(
-                      controller: _saJsonCtrl,
-                      maxLines: null,
-                      minLines: 6,
-                      onChanged: (v) async {
-                        if (_saJsonCtrl.value.composing.isValid) return;
-                        final old = sp.getProviderConfig(widget.providerKey, defaultName: widget.displayName);
-                        await sp.setProviderConfig(widget.providerKey, old.copyWith(serviceAccountJson: v));
-                      },
-                      style: const TextStyle(fontSize: 14),
-                      decoration: _inputDecoration(context).copyWith(hintText: '{\n  "type": "service_account", ...\n}'),
-                    ),
-                  ),
+                Builder(
+                  builder: (innerCtx) {
+                    final maxSaJsonHeight = computeInputMaxHeight(
+                      context: innerCtx,
+                      reservedHeight: 260,
+                      softCapFraction: 0.6,
+                      minHeight: 120,
+                    );
+                    return ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: 120, maxHeight: maxSaJsonHeight),
+                      child: Focus(
+                        onFocusChange: (has) async {
+                          if (!has) {
+                            final v = _saJsonCtrl.text;
+                            final old = sp.getProviderConfig(widget.providerKey, defaultName: widget.displayName);
+                            await sp.setProviderConfig(widget.providerKey, old.copyWith(serviceAccountJson: v));
+                          }
+                        },
+                        child: TextField(
+                          controller: _saJsonCtrl,
+                          maxLines: null,
+                          minLines: 6,
+                          onChanged: (v) async {
+                            if (_saJsonCtrl.value.composing.isValid) return;
+                            final old = sp.getProviderConfig(widget.providerKey, defaultName: widget.displayName);
+                            await sp.setProviderConfig(widget.providerKey, old.copyWith(serviceAccountJson: v));
+                          },
+                          style: const TextStyle(fontSize: 14),
+                          decoration: _inputDecoration(context).copyWith(hintText: '{\n  "type": "service_account", ...\n}'),
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 8),
                 Align(
