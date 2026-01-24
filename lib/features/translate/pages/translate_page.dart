@@ -196,6 +196,16 @@ class _TranslatePageState extends State<TranslatePage> {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final asset = (_modelId != null) ? BrandAssets.assetForName(_modelId!) : null;
+    final codeEditorPadding = const EdgeInsets.fromLTRB(12, 8, 12, 12);
+    final codeEditorStyle = CodeEditorStyle(
+      fontSize: 15,
+      fontHeight: 1.4,
+      textColor: cs.onSurface,
+      hintTextColor: cs.onSurface.withOpacity(0.5),
+      cursorColor: cs.primary,
+      backgroundColor: Colors.transparent,
+      selectionColor: cs.primary.withOpacity(0.3),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -284,16 +294,8 @@ class _TranslatePageState extends State<TranslatePage> {
                     indicatorBuilder: null,
                     chunkAnalyzer: const NonCodeChunkAnalyzer(),
                     hint: l10n.translatePageInputHint,
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                    style: CodeEditorStyle(
-                      fontSize: 15,
-                      fontHeight: 1.4,
-                      textColor: Theme.of(context).colorScheme.onSurface,
-                      hintTextColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                      cursorColor: Theme.of(context).colorScheme.primary,
-                      backgroundColor: Colors.transparent,
-                      selectionColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                    ),
+                    padding: codeEditorPadding,
+                    style: codeEditorStyle,
                   ),
                 ),
               ),
@@ -311,16 +313,8 @@ class _TranslatePageState extends State<TranslatePage> {
                     indicatorBuilder: null,
                     chunkAnalyzer: const NonCodeChunkAnalyzer(),
                     hint: l10n.translatePageOutputHint,
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                    style: CodeEditorStyle(
-                      fontSize: 15,
-                      fontHeight: 1.4,
-                      textColor: Theme.of(context).colorScheme.onSurface,
-                      hintTextColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                      cursorColor: Theme.of(context).colorScheme.primary,
-                      backgroundColor: Colors.transparent,
-                      selectionColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                    ),
+                    padding: codeEditorPadding,
+                    style: codeEditorStyle,
                   ),
                 ),
               ),

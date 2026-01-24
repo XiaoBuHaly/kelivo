@@ -1689,12 +1689,13 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
                 const SizedBox(height: 6),
                 Builder(
                   builder: (innerCtx) {
-                    final maxSaJsonHeight = computeInputMaxHeight(
+                    final rawMaxSaJsonHeight = computeInputMaxHeight(
                       context: innerCtx,
                       reservedHeight: 260,
                       softCapFraction: 0.6,
                       minHeight: 120,
                     );
+                    final maxSaJsonHeight = rawMaxSaJsonHeight < 120 ? 120.0 : rawMaxSaJsonHeight;
                     return ConstrainedBox(
                       constraints: BoxConstraints(minHeight: 120, maxHeight: maxSaJsonHeight),
                       child: Focus(

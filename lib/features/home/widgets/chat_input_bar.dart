@@ -302,7 +302,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
   }
 
   Object? _handleNewLineIntent(CodeShortcutNewLineIntent intent) {
-    final keys = RawKeyboard.instance.keysPressed;
+    final keys = HardwareKeyboard.instance.logicalKeysPressed;
     final shift = keys.contains(LogicalKeyboardKey.shiftLeft) ||
         keys.contains(LogicalKeyboardKey.shiftRight);
     if (shift) {
@@ -352,7 +352,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
       // Respect IME composition (e.g., Chinese Pinyin). If composing, let IME handle Enter.
       final composingActive = _controller.isComposing;
       if (composingActive) return KeyEventResult.ignored;
-      final keys = RawKeyboard.instance.keysPressed;
+      final keys = HardwareKeyboard.instance.logicalKeysPressed;
       final shift = keys.contains(LogicalKeyboardKey.shiftLeft) || keys.contains(LogicalKeyboardKey.shiftRight);
       final ctrl = keys.contains(LogicalKeyboardKey.controlLeft) || keys.contains(LogicalKeyboardKey.controlRight);
       final meta = keys.contains(LogicalKeyboardKey.metaLeft) || keys.contains(LogicalKeyboardKey.metaRight);
@@ -382,7 +382,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
 
     // Paste handling for images on iOS/macOS (tablet/desktop)
     if (isDown && isPasteV) {
-      final keys = RawKeyboard.instance.keysPressed;
+      final keys = HardwareKeyboard.instance.logicalKeysPressed;
       final meta = keys.contains(LogicalKeyboardKey.metaLeft) || keys.contains(LogicalKeyboardKey.metaRight);
       final ctrl = keys.contains(LogicalKeyboardKey.controlLeft) || keys.contains(LogicalKeyboardKey.controlRight);
       if (meta || ctrl) {
@@ -394,7 +394,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     // Arrow repeat fix only needed on iOS tablets
     if (!isIosTablet || !isArrow) return KeyEventResult.ignored;
 
-    final keys = RawKeyboard.instance.keysPressed;
+    final keys = HardwareKeyboard.instance.logicalKeysPressed;
     final shift = keys.contains(LogicalKeyboardKey.shiftLeft) || keys.contains(LogicalKeyboardKey.shiftRight);
     final alt = keys.contains(LogicalKeyboardKey.altLeft) || keys.contains(LogicalKeyboardKey.altRight) ||
         keys.contains(LogicalKeyboardKey.metaLeft) || keys.contains(LogicalKeyboardKey.metaRight) ||
@@ -1041,16 +1041,16 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
       if (extend) {
         // Extend selection to word boundary
         if (dir < 0) {
-          _controller.extendSelectionToWordBoundaryForward();
-        } else {
           _controller.extendSelectionToWordBoundaryBackward();
+        } else {
+          _controller.extendSelectionToWordBoundaryForward();
         }
       } else {
         // Move cursor to word boundary
         if (dir < 0) {
-          _controller.moveCursorToWordBoundaryForward();
-        } else {
           _controller.moveCursorToWordBoundaryBackward();
+        } else {
+          _controller.moveCursorToWordBoundaryForward();
         }
       }
     } else {
@@ -1298,8 +1298,10 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
                           //   );
                           // }
 
-                          // enterToSend setting is checked but CodeEditor handles Enter differently
-                          final _ = context.watch<SettingsProvider>().enterToSendOnMobile;
+                          // enterToSend setting is checked but CodeEditor handles Enter differently.
+                          // Keep watching to rebuild when the setting changes.
+                          // ignore: unused_local_variable
+                          final enterToSendOnMobile = context.watch<SettingsProvider>().enterToSendOnMobile;
                           final fontSize = (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ? 14.0 : 15.0;
                           final fontHeight = 1.4;
                           final maxLinesLimit = _isExpanded ? 25 : 5;

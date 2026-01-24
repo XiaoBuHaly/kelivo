@@ -38,7 +38,7 @@ double computeInputMaxHeight({
 }) {
   final size = MediaQuery.sizeOf(context);
   final viewInsets = MediaQuery.viewInsetsOf(context);
-  final visibleHeight = size.height - viewInsets.bottom - extraBottomPadding;
+  final visibleHeight = math.max(0.0, size.height - viewInsets.bottom - extraBottomPadding);
   final cappedFraction = softCapFraction.clamp(0.1, 0.95);
   final softCap = visibleHeight * cappedFraction;
   final available = visibleHeight - reservedHeight;
@@ -48,5 +48,6 @@ double computeInputMaxHeight({
     final capped = math.min(softCap, available);
     return math.min(available, math.max(minCap, capped));
   }
-  return math.max(minCap, softCap);
+  final fallback = math.max(minCap, softCap);
+  return math.min(visibleHeight, fallback);
 }

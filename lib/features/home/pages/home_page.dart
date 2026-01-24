@@ -612,7 +612,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       },
       onSend: (text) {
         _controller.sendMessage(text);
-        _inputController.text = ''; // Clear the input
+        _inputController.value = const CodeLineEditingValue.empty(); // Clear + reset selection/composing
         if (PlatformUtils.isMobile) {
           _controller.dismissKeyboard();
         } else {

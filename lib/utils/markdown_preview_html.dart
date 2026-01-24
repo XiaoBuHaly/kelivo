@@ -8,8 +8,8 @@ class MarkdownPreviewHtmlBuilder {
     final template = await rootBundle.loadString('assets/html/mark.html');
     return template
         .replaceAll('{{MARKDOWN_BASE64}}', base64Encode(utf8.encode(markdown)))
-        .replaceAll('{{BACKGROUND_COLOR}}', _toCssHex(cs.background))
-        .replaceAll('{{ON_BACKGROUND_COLOR}}', _toCssHex(cs.onBackground))
+        .replaceAll('{{BACKGROUND_COLOR}}', _toCssHex(cs.surface))
+        .replaceAll('{{ON_BACKGROUND_COLOR}}', _toCssHex(cs.onSurface))
         .replaceAll('{{SURFACE_COLOR}}', _toCssHex(cs.surface))
         .replaceAll('{{ON_SURFACE_COLOR}}', _toCssHex(cs.onSurface))
         .replaceAll('{{SURFACE_VARIANT_COLOR}}', _toCssHex(cs.surfaceContainerHighest))
