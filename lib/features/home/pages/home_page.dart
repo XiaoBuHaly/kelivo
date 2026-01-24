@@ -611,6 +611,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         }
       },
       onSend: (text) {
+        // TODO: Prevent sending empty/whitespace-only messages (keep chat history clean).
         _controller.sendMessage(text);
         _inputController.value = const CodeLineEditingValue.empty(); // Clear + reset selection/composing
         if (PlatformUtils.isMobile) {

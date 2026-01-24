@@ -356,6 +356,7 @@ class _InstructionInjectionEditDialogState extends State<_InstructionInjectionEd
   @override
   void initState() {
     super.initState();
+    // TODO: If this dialog is reused with different initial values, update controllers in didUpdateWidget to avoid stale title/prompt content.
     _titleController = TextEditingController(text: widget.initTitle);
     _promptController = CodeLineEditingController.fromText(widget.initPrompt);
   }
@@ -419,6 +420,7 @@ class _InstructionInjectionEditDialogState extends State<_InstructionInjectionEd
                       hint: l10n.instructionInjectionPromptLabel,
                       padding: const EdgeInsets.all(12),
                       style: CodeEditorStyle(
+                        // TODO: Extract shared CodeEditorStyle/config for reuse across editors to reduce duplication.
                         fontSize: 14,
                         fontHeight: 1.4,
                         textColor: cs.onSurface,
@@ -440,6 +442,7 @@ class _InstructionInjectionEditDialogState extends State<_InstructionInjectionEd
                 filled: true,
                 dense: true,
                 onTap: () {
+                  // TODO: Add inline validation/feedback (e.g., disable Save or show error) when title or prompt is empty/invalid instead of failing silently after submit.
                   Navigator.of(context).pop({
                     'title': _titleController.text,
                     'prompt': _promptController.text,

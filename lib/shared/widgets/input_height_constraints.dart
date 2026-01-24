@@ -23,6 +23,7 @@ BoxConstraints buildInputMaxHeightConstraints({
     extraBottomPadding: extraBottomPadding,
   );
   if (!maxHeight.isFinite || maxHeight <= 0) {
+    // TODO: Consider returning a safe minHeight constraint instead of unconstrained BoxConstraints().
     return const BoxConstraints();
   }
   final safeMinHeight = math.max(0.0, minHeight);
@@ -56,5 +57,6 @@ double computeInputMaxHeight({
     final capped = math.min(softCap, available);
     return math.max(minCap, capped);
   }
+  // TODO: Revisit fallback behavior when reservedHeight exceeds visible height to avoid unusably small inputs.
   return minCap;
 }

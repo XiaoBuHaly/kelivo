@@ -30,7 +30,31 @@ class _MessageEditSheetState extends State<_MessageEditSheet> {
   @override
   void initState() {
     super.initState();
-    _controller = CodeLineEditingController.fromText(widget.message.content);
+    _controller = CodeLineEditingController();
+    _syncControllerText(widget.message.content);
+  }
+
+  @override
+  void didUpdateWidget(covariant _MessageEditSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message.content != widget.message.content) {
+      _syncControllerText(widget.message.content);
+    }
+  }
+
+  void _syncControllerText(String text) {
+    if (text.isEmpty) {
+      _controller.value = const CodeLineEditingValue.empty();
+      return;
+    }
+    final lines = text.codeLines;
+    final lastIndex = lines.length - 1;
+    final lastOffset = lines.last.length;
+    _controller.value = CodeLineEditingValue(
+      codeLines: lines,
+      selection: CodeLineSelection.collapsed(index: lastIndex, offset: lastOffset),
+      composing: TextRange.empty,
+    );
   }
 
   @override

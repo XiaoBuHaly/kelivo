@@ -31,6 +31,7 @@ class MarkdownMediaSanitizer {
     int last = 0;
     for (final m in matches) {
       sb.write(markdown.substring(last, m.start));
+      // TODO: Avoid unsafe non-null assertions on regex capture groups; handle unexpected match shapes without throwing.
       final dataUrl = m.group(1)!;
       String ext = AppDirectories.extFromMime(_mimeOf(dataUrl));
 
@@ -67,6 +68,8 @@ class MarkdownMediaSanitizer {
       final digest = _uuid.v5(Namespace.url.value, normalized);
       final file = File('${dir.path}/img_$digest.$ext');
       if (!await file.exists()) {
+        // TODO: Make file creation atomic/locked to avoid race conditions when multiple isolates write the same digest path concurrently.
+        // TODO: Handle IO errors (permission denied / disk full) and decide whether to fall back to original markdown or log.
         await file.writeAsBytes(bytes, flush: true);
       }
 

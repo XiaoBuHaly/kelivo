@@ -60,6 +60,7 @@ Future<void> showOcrPromptSheet(BuildContext context) async {
                     constraints: BoxConstraints(minHeight: 120, maxHeight: maxPromptHeight),
                     child: TextField(
                       controller: controller,
+                      // TODO: Migrate this multi-line TextField to CodeEditor for consistency with other migrated inputs.
                       maxLines: 8,
                       decoration: InputDecoration(
                         hintText: l10n.defaultModelPageOcrPromptHint,

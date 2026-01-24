@@ -1695,6 +1695,7 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
                       softCapFraction: 0.6,
                       minHeight: 120,
                     );
+                    // TODO: computeInputMaxHeight already enforces minHeight; remove this redundant clamp (can be simplified to math.max) and keep the height logic consistent.
                     final maxSaJsonHeight = rawMaxSaJsonHeight < 120 ? 120.0 : rawMaxSaJsonHeight;
                     return ConstrainedBox(
                       constraints: BoxConstraints(minHeight: 120, maxHeight: maxSaJsonHeight),
@@ -1708,6 +1709,7 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
                         },
                         child: TextField(
                           controller: _saJsonCtrl,
+                          // TODO: Migrate this multi-line TextField to CodeEditor (and switch to CodeLineEditingController) for consistent IME behavior with other migrated inputs.
                           maxLines: null,
                           minLines: 6,
                           onChanged: (v) async {

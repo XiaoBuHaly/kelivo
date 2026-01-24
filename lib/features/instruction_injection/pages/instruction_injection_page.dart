@@ -394,6 +394,7 @@ class _InstructionInjectionEditSheetState extends State<_InstructionInjectionEdi
   @override
   void initState() {
     super.initState();
+    // TODO: If this sheet is rebuilt with a different item, update controllers in didUpdateWidget to avoid stale title/prompt content.
     _titleController = TextEditingController(text: widget.item?.title ?? '');
     _promptController = CodeLineEditingController.fromText(widget.item?.prompt ?? '');
   }
@@ -480,6 +481,7 @@ class _InstructionInjectionEditSheetState extends State<_InstructionInjectionEdi
                 ),
                 Container(
                   height: 180,
+                  // TODO: Replace fixed height with responsive constraints to avoid overflow on small screens/keyboard.
                   decoration: BoxDecoration(
                     color: isDark ? Colors.white10 : const Color(0xFFF2F3F5),
                     borderRadius: BorderRadius.circular(12),
@@ -520,6 +522,7 @@ class _InstructionInjectionEditSheetState extends State<_InstructionInjectionEdi
                   child: _IosFilledButton(
                     label: l10n.quickPhraseSaveButton,
                     onTap: () {
+                      // TODO: Add immediate validation/UX feedback (e.g., disable Save or show error) when title or prompt is empty/invalid.
                       Navigator.of(context).pop({
                         'title': _titleController.text,
                         'prompt': _promptController.text,

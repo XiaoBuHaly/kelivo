@@ -79,6 +79,7 @@ class _TranslatePageState extends State<TranslatePage> {
     final lang = await showLanguageSelector(context);
     if (!mounted || lang == null) return;
     if (lang.code == '__clear__') {
+      // TODO: Decide whether clearing the language selector should also reset the selected language state (_lang) to a default/unset value.
       setState(() => _dst.value = const CodeLineEditingValue.empty());
       return;
     }
@@ -123,6 +124,7 @@ class _TranslatePageState extends State<TranslatePage> {
             final cleaned = s.replaceFirst(RegExp(r'^\s+'), '');
             _setOutputText(cleaned);
           } else {
+            // TODO: Avoid repeated string concatenation during streaming (consider buffering / incremental append).
             _setOutputText('${_dst.text}$s');
           }
         },
@@ -284,9 +286,11 @@ class _TranslatePageState extends State<TranslatePage> {
               padding: const EdgeInsets.all(8),
               builder: (color) {
                 if (asset != null && asset.toLowerCase().endsWith('.svg')) {
+                  // TODO: Add error handling/fallback UI if the brand asset path is invalid or the asset fails to load.
                   return SvgPicture.asset(asset, width: 22, height: 22);
                 }
                 if (asset != null) {
+                  // TODO: Add error handling/fallback UI if the brand asset path is invalid or the asset fails to load.
                   return Image.asset(asset, width: 22, height: 22);
                 }
                 return Icon(lucide.Lucide.Bot, size: 22, color: color);

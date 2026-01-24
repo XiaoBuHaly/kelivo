@@ -374,6 +374,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
   // Note: This method is no longer used since CodeEditor has its own context menu.
   // Kept for reference but unused.
   Widget _buildContextMenuLegacy(BuildContext context, EditableTextState state) {
+    // TODO: Remove this dead legacy context menu method (and any leftover references) since CodeEditor provides its own context menu.
     // This was used with TextField, not CodeEditor
     return const SizedBox.shrink();
   }

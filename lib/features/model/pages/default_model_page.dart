@@ -201,11 +201,13 @@ class DefaultModelPage extends StatelessWidget {
                       softCapFraction: 0.45,
                       minHeight: 120,
                     );
+                    // TODO: computeInputMaxHeight already enforces minHeight; remove this redundant clamp and consider extracting the repeated Builder/ConstrainedBox/TextField pattern.
                     final maxPromptHeight = rawMaxPromptHeight < 120 ? 120.0 : rawMaxPromptHeight;
                     return ConstrainedBox(
                       constraints: BoxConstraints(minHeight: 120, maxHeight: maxPromptHeight),
                       child: TextField(
                         controller: controller,
+                        // TODO: Migrate this multi-line TextField to CodeEditor for consistency with other migrated inputs.
                         maxLines: 8,
                         decoration: InputDecoration(
                           hintText: l10n.defaultModelPageTitlePromptHint,
@@ -291,11 +293,13 @@ class DefaultModelPage extends StatelessWidget {
                       softCapFraction: 0.45,
                       minHeight: 120,
                     );
+                    // TODO: computeInputMaxHeight already enforces minHeight; remove this redundant clamp and consider extracting the repeated Builder/ConstrainedBox/TextField pattern.
                     final maxPromptHeight = rawMaxPromptHeight < 120 ? 120.0 : rawMaxPromptHeight;
                     return ConstrainedBox(
                       constraints: BoxConstraints(minHeight: 120, maxHeight: maxPromptHeight),
                       child: TextField(
                         controller: controller,
+                        // TODO: Migrate this multi-line TextField to CodeEditor for consistency with other migrated inputs.
                         maxLines: 8,
                         decoration: InputDecoration(
                           hintText: l10n.defaultModelPageTranslatePromptHint,
@@ -381,11 +385,13 @@ class DefaultModelPage extends StatelessWidget {
                       softCapFraction: 0.45,
                       minHeight: 120,
                     );
+                    // TODO: computeInputMaxHeight already enforces minHeight; remove this redundant clamp and consider extracting the repeated Builder/ConstrainedBox/TextField pattern.
                     final maxPromptHeight = rawMaxPromptHeight < 120 ? 120.0 : rawMaxPromptHeight;
                     return ConstrainedBox(
                       constraints: BoxConstraints(minHeight: 120, maxHeight: maxPromptHeight),
                       child: TextField(
                         controller: controller,
+                        // TODO: Migrate this multi-line TextField to CodeEditor for consistency with other migrated inputs.
                         maxLines: 8,
                         decoration: InputDecoration(
                           hintText: l10n.defaultModelPageSummaryPromptHint,

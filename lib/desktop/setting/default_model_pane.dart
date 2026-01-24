@@ -175,6 +175,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final sp = context.read<SettingsProvider>();
     final ctrl = TextEditingController(text: sp.titlePrompt);
+    // TODO: Dispose this temporary TextEditingController when the dialog is closed.
     await showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -185,6 +186,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
           softCapFraction: 0.6,
           minHeight: 160,
         );
+        // TODO: computeInputMaxHeight already enforces minHeight; remove this redundant clamp and consolidate repeated height calculations across dialogs.
         final maxPromptHeight = rawMaxPromptHeight < 160 ? 160.0 : rawMaxPromptHeight;
         return Dialog(
           backgroundColor: cs.surface,
@@ -225,6 +227,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
                     constraints: BoxConstraints(minHeight: 160, maxHeight: maxPromptHeight),
                     child: TextField(
                       controller: ctrl,
+                      // TODO: Consider adding input constraints (e.g., maxLength) and validating prompt length to avoid excessively long prompts.
                       maxLines: null,
                       minLines: 8,
                       style: const TextStyle(fontSize: 14),
@@ -279,6 +282,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final sp = context.read<SettingsProvider>();
     final ctrl = TextEditingController(text: sp.translatePrompt);
+    // TODO: Dispose this temporary TextEditingController when the dialog is closed.
     await showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -289,6 +293,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
           softCapFraction: 0.6,
           minHeight: 160,
         );
+        // TODO: computeInputMaxHeight already enforces minHeight; remove this redundant clamp and consolidate repeated height calculations across dialogs.
         final maxPromptHeight = rawMaxPromptHeight < 160 ? 160.0 : rawMaxPromptHeight;
         return Dialog(
           backgroundColor: cs.surface,
@@ -329,6 +334,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
                     constraints: BoxConstraints(minHeight: 160, maxHeight: maxPromptHeight),
                     child: TextField(
                       controller: ctrl,
+                      // TODO: Consider adding input constraints (e.g., maxLength) and validating prompt length to avoid excessively long prompts.
                       maxLines: null,
                       minLines: 8,
                       style: const TextStyle(fontSize: 14),
@@ -386,6 +392,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final sp = context.read<SettingsProvider>();
     final ctrl = TextEditingController(text: sp.ocrPrompt);
+    // TODO: Dispose this temporary TextEditingController when the dialog is closed.
     await showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -396,6 +403,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
           softCapFraction: 0.6,
           minHeight: 160,
         );
+        // TODO: computeInputMaxHeight already enforces minHeight; remove this redundant clamp and consolidate repeated height calculations across dialogs.
         final maxPromptHeight = rawMaxPromptHeight < 160 ? 160.0 : rawMaxPromptHeight;
         return Dialog(
           backgroundColor: cs.surface,
@@ -436,6 +444,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
                     constraints: BoxConstraints(minHeight: 160, maxHeight: maxPromptHeight),
                     child: TextField(
                       controller: ctrl,
+                      // TODO: Consider adding input constraints (e.g., maxLength) and validating prompt length to avoid excessively long prompts.
                       maxLines: null,
                       minLines: 8,
                       style: const TextStyle(fontSize: 14),
@@ -482,6 +491,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final sp = context.read<SettingsProvider>();
     final ctrl = TextEditingController(text: sp.summaryPrompt);
+    // TODO: Dispose this temporary TextEditingController when the dialog is closed.
     await showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -492,6 +502,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
           softCapFraction: 0.6,
           minHeight: 160,
         );
+        // TODO: computeInputMaxHeight already enforces minHeight; remove this redundant clamp and consolidate repeated height calculations across dialogs.
         final maxPromptHeight = rawMaxPromptHeight < 160 ? 160.0 : rawMaxPromptHeight;
         return Dialog(
           backgroundColor: cs.surface,
@@ -532,6 +543,7 @@ class DesktopDefaultModelPane extends StatelessWidget {
                     constraints: BoxConstraints(minHeight: 160, maxHeight: maxPromptHeight),
                     child: TextField(
                       controller: ctrl,
+                      // TODO: Consider adding input constraints (e.g., maxLength) and validating prompt length to avoid excessively long prompts.
                       maxLines: null,
                       minLines: 8,
                       style: const TextStyle(fontSize: 14),

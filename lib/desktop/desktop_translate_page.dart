@@ -122,6 +122,7 @@ class _DesktopTranslatePageState extends State<DesktopTranslatePage> {
   }
 
   Future<void> _startTranslate() async {
+    // TODO: Guard against concurrent translate runs (e.g., if triggered twice quickly).
     final l10n = AppLocalizations.of(context)!;
     final settings = context.read<SettingsProvider>();
 
@@ -163,6 +164,7 @@ class _DesktopTranslatePageState extends State<DesktopTranslatePage> {
           if (_output.text.isEmpty) {
             _setOutputText(s.replaceFirst(RegExp(r'^\s+'), ''));
           } else {
+            // TODO: Avoid repeated string concatenation during streaming (consider buffering / incremental append).
             _setOutputText('${_output.text}$s');
           }
         },
@@ -284,6 +286,8 @@ class _DesktopTranslatePageState extends State<DesktopTranslatePage> {
                                   icon: lucide.Lucide.Eraser,
                                   label: '清空',
                                   onTap: () {
+                                    // TODO: Replace hard-coded label with AppLocalizations (i18n).
+                                    // TODO: Confirm before clearing when either source or output is non-empty to prevent accidental data loss.
                                     _source.value = const CodeLineEditingValue.empty();
                                     _output.value = const CodeLineEditingValue.empty();
                                   },
@@ -315,6 +319,8 @@ class _DesktopTranslatePageState extends State<DesktopTranslatePage> {
                                   icon: lucide.Lucide.Copy,
                                   label: '复制',
                                   onTap: () async {
+                                    // TODO: Replace hard-coded label with AppLocalizations (i18n).
+                                    // TODO: Handle Clipboard.setData failures and provide user feedback when copying fails.
                                     await Clipboard.setData(ClipboardData(text: _output.text));
                                     if (!mounted) return;
                                     showAppSnackBar(

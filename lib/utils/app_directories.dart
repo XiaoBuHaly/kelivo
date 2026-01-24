@@ -58,6 +58,7 @@ class AppDirectories {
   /// - iOS/macOS: Caches directory
   /// - Windows/Linux: platform cache directory (app-specific on Linux via XDG)
   static Future<Directory> getSystemCacheDirectory() async {
+    // TODO: Add error handling for getApplicationCacheDirectory failures (return fallback/null or propagate a controlled error).
     return await getApplicationCacheDirectory();
   }
 

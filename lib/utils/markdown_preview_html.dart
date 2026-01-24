@@ -6,6 +6,7 @@ class MarkdownPreviewHtmlBuilder {
   static Future<String> buildFromMarkdown(BuildContext context, String markdown) async {
     final cs = Theme.of(context).colorScheme;
     final template = await rootBundle.loadString('assets/html/mark.html');
+    // TODO: Confirm token semantics; BACKGROUND vs SURFACE (and ON_* variants) currently map to the same colors.
     return template
         .replaceAll('{{MARKDOWN_BASE64}}', base64Encode(utf8.encode(markdown)))
         .replaceAll('{{BACKGROUND_COLOR}}', _toCssHex(cs.surface))
@@ -20,6 +21,7 @@ class MarkdownPreviewHtmlBuilder {
   }
 
   static String _toCssHex(Color c) {
+    // TODO: Fix channel conversion/order for CSS (prefer #RRGGBB or #AARRGGBB; avoid treating channels as 0..1 doubles).
     final a = _toHex(_to8Bit(c.a));
     final r = _toHex(_to8Bit(c.r));
     final g = _toHex(_to8Bit(c.g));
