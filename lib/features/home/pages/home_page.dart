@@ -176,8 +176,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
     // Use CodeLineEditingController's replaceSelection to insert text at cursor
-    // TODO: Wrap replaceSelection in try/catch to avoid rare crashes if controller is disposed/invalid.
-    _inputController.replaceSelection(trimmed);
+    try {
+      _inputController.replaceSelection(trimmed);
+    } catch (_) {
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _controller.forceScrollToBottomSoon(animate: false);

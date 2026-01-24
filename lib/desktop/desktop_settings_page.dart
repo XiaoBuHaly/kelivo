@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:re_editor/re_editor.dart';
 import 'dart:math' as math;
 import 'dart:convert';
 import 'dart:typed_data';
@@ -1246,7 +1247,7 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
   final TextEditingController _baseUrlCtrl = TextEditingController();
   final TextEditingController _locationCtrl = TextEditingController();
   final TextEditingController _projectIdCtrl = TextEditingController();
-  final TextEditingController _saJsonCtrl = TextEditingController();
+  final CodeLineEditingController _saJsonCtrl = CodeLineEditingController();
   final TextEditingController _apiPathCtrl = TextEditingController();
 
   void _syncCtrl(TextEditingController c, String newText) {
@@ -1261,13 +1262,35 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
     }
   }
 
+  void _syncCodeCtrl(CodeLineEditingController c, String newText) {
+    // Do not disturb ongoing IME composition
+    if (c.isComposing) return;
+    if (c.text == newText) return;
+    if (newText.isEmpty) {
+      c.value = const CodeLineEditingValue.empty();
+      return;
+    }
+    final lines = newText.codeLines;
+    if (lines.isEmpty) {
+      c.value = const CodeLineEditingValue.empty();
+      return;
+    }
+    final lastIndex = lines.length - 1;
+    final lastOffset = lines.last.length;
+    c.value = CodeLineEditingValue(
+      codeLines: lines,
+      selection: CodeLineSelection.collapsed(index: lastIndex, offset: lastOffset),
+      composing: TextRange.empty,
+    );
+  }
+
   void _syncControllersFromConfig(ProviderConfig cfg) {
     _syncCtrl(_apiKeyCtrl, cfg.apiKey);
     _syncCtrl(_baseUrlCtrl, cfg.baseUrl);
     _syncCtrl(_apiPathCtrl, cfg.chatPath ?? '/chat/completions');
     _syncCtrl(_locationCtrl, cfg.location ?? '');
     _syncCtrl(_projectIdCtrl, cfg.projectId ?? '');
-    _syncCtrl(_saJsonCtrl, cfg.serviceAccountJson ?? '');
+    _syncCodeCtrl(_saJsonCtrl, cfg.serviceAccountJson ?? '');
   }
 
   @override
@@ -1707,18 +1730,36 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
                             await sp.setProviderConfig(widget.providerKey, old.copyWith(serviceAccountJson: v));
                           }
                         },
-                        child: TextField(
-                          controller: _saJsonCtrl,
-                          // TODO: Migrate this multi-line TextField to CodeEditor (and switch to CodeLineEditingController) for consistent IME behavior with other migrated inputs.
-                          maxLines: null,
-                          minLines: 6,
-                          onChanged: (v) async {
-                            if (_saJsonCtrl.value.composing.isValid) return;
-                            final old = sp.getProviderConfig(widget.providerKey, defaultName: widget.displayName);
-                            await sp.setProviderConfig(widget.providerKey, old.copyWith(serviceAccountJson: v));
-                          },
-                          style: const TextStyle(fontSize: 14),
-                          decoration: _inputDecoration(context).copyWith(hintText: '{\n  "type": "service_account", ...\n}'),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.white10 : const Color(0xFFF7F7F9),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: cs.outlineVariant.withOpacity(0.12), width: 0.6),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: CodeEditor(
+                            controller: _saJsonCtrl,
+                            autofocus: false,
+                            wordWrap: true,
+                            indicatorBuilder: null,
+                            chunkAnalyzer: const NonCodeChunkAnalyzer(),
+                            hint: '{\n  "type": "service_account", ...\n}',
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            style: CodeEditorStyle(
+                              fontSize: 14,
+                              fontHeight: 1.4,
+                              textColor: cs.onSurface,
+                              hintTextColor: cs.onSurface.withOpacity(0.5),
+                              cursorColor: cs.primary,
+                              backgroundColor: Colors.transparent,
+                              selectionColor: cs.primary.withOpacity(0.3),
+                            ),
+                            onChanged: (value) async {
+                              if (_saJsonCtrl.isComposing) return;
+                              final old = sp.getProviderConfig(widget.providerKey, defaultName: widget.displayName);
+                              await sp.setProviderConfig(widget.providerKey, old.copyWith(serviceAccountJson: _saJsonCtrl.text));
+                            },
+                          ),
                         ),
                       ),
                     );

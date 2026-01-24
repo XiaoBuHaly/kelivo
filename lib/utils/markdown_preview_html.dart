@@ -22,7 +22,7 @@ class MarkdownPreviewHtmlBuilder {
   }
 
   static String _toCssHex(Color c) {
-    // TODO: Fix channel conversion/order for CSS (prefer #RRGGBB or #AARRGGBB; avoid treating channels as 0..1 doubles).
+    // TODO: Fix _toCssHex implementation; output CSS hex as #RRGGBB or #RRGGBBAA (CSS Color Level 4).
     final a = _toHex(_to8Bit(c.a));
     final r = _toHex(_to8Bit(c.r));
     final g = _toHex(_to8Bit(c.g));

@@ -886,8 +886,12 @@ class HomePageController extends ChangeNotifier {
   Future<void> handleQuickPhraseSelection(QuickPhrase? selected) async {
     if (selected == null) return;
     // Use CodeLineEditingController's replaceSelection to insert quick phrase
-    _inputController.replaceSelection(selected.content);
-    notifyListeners();
+    try {
+      _inputController.replaceSelection(selected.content);
+      notifyListeners();
+    } catch (_) {
+      return;
+    }
   }
 
   // ============================================================================

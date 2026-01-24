@@ -45,15 +45,22 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
       _controller.value = const CodeLineEditingValue.empty();
       return;
     }
-    // TODO: Guard codeLines conversion with try/catch to avoid crashes on unexpected input.
-    final lines = text.codeLines;
-    final lastIndex = lines.length - 1;
-    final lastOffset = lines.last.length;
-    _controller.value = CodeLineEditingValue(
-      codeLines: lines,
-      selection: CodeLineSelection.collapsed(index: lastIndex, offset: lastOffset),
-      composing: TextRange.empty,
-    );
+    try {
+      final lines = text.codeLines;
+      if (lines.isEmpty) {
+        _controller.value = const CodeLineEditingValue.empty();
+        return;
+      }
+      final lastIndex = lines.length - 1;
+      final lastOffset = lines.last.length;
+      _controller.value = CodeLineEditingValue(
+        codeLines: lines,
+        selection: CodeLineSelection.collapsed(index: lastIndex, offset: lastOffset),
+        composing: TextRange.empty,
+      );
+    } catch (_) {
+      _controller.value = const CodeLineEditingValue.empty();
+    }
   }
 
   @override

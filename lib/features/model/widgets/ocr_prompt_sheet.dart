@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:re_editor/re_editor.dart';
 
 import '../../../core/providers/settings_provider.dart';
 import '../../../l10n/app_localizations.dart';
@@ -9,7 +10,7 @@ Future<void> showOcrPromptSheet(BuildContext context) async {
   final cs = Theme.of(context).colorScheme;
   final l10n = AppLocalizations.of(context)!;
   final settings = context.read<SettingsProvider>();
-  final controller = TextEditingController(text: settings.ocrPrompt);
+  final controller = CodeLineEditingController.fromText(settings.ocrPrompt);
 
   await showModalBottomSheet(
     context: context,
@@ -58,25 +59,29 @@ Future<void> showOcrPromptSheet(BuildContext context) async {
                   );
                   return ConstrainedBox(
                     constraints: BoxConstraints(minHeight: 120, maxHeight: maxPromptHeight),
-                    child: TextField(
-                      controller: controller,
-                      // TODO: Migrate this multi-line TextField to CodeEditor for consistency with other migrated inputs.
-                      maxLines: 8,
-                      decoration: InputDecoration(
-                        hintText: l10n.defaultModelPageOcrPromptHint,
-                        filled: true,
-                        fillColor: Theme.of(ctx).brightness == Brightness.dark ? Colors.white10 : const Color(0xFFF2F3F5),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: cs.outlineVariant.withOpacity(0.4)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: cs.outlineVariant.withOpacity(0.4)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: cs.primary.withOpacity(0.5)),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(ctx).brightness == Brightness.dark ? Colors.white10 : const Color(0xFFF2F3F5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: cs.outlineVariant.withOpacity(0.4)),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: CodeEditor(
+                        controller: controller,
+                        autofocus: false,
+                        wordWrap: true,
+                        indicatorBuilder: null,
+                        chunkAnalyzer: const NonCodeChunkAnalyzer(),
+                        hint: l10n.defaultModelPageOcrPromptHint,
+                        padding: const EdgeInsets.all(12),
+                        style: CodeEditorStyle(
+                          fontSize: 14,
+                          fontHeight: 1.4,
+                          textColor: cs.onSurface,
+                          hintTextColor: cs.onSurface.withOpacity(0.5),
+                          cursorColor: cs.primary,
+                          backgroundColor: Colors.transparent,
+                          selectionColor: cs.primary.withOpacity(0.3),
                         ),
                       ),
                     ),
