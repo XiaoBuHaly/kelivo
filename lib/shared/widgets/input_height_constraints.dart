@@ -25,10 +25,14 @@ BoxConstraints buildInputMaxHeightConstraints({
   if (!maxHeight.isFinite || maxHeight <= 0) {
     return const BoxConstraints();
   }
-  return BoxConstraints(maxHeight: maxHeight);
+  final safeMinHeight = math.max(0.0, minHeight);
+  return BoxConstraints(minHeight: safeMinHeight, maxHeight: maxHeight);
 }
 
 /// Compute a max height for text inputs based on visible screen area.
+///
+/// This expects a valid [MediaQuery]. If absent, it falls back to [minHeight]
+/// to avoid exceptions and keep layout safe.
 double computeInputMaxHeight({
   required BuildContext context,
   double reservedHeight = 0,
@@ -36,17 +40,21 @@ double computeInputMaxHeight({
   double minHeight = 80,
   double extraBottomPadding = 0,
 }) {
-  final size = MediaQuery.sizeOf(context);
-  final viewInsets = MediaQuery.viewInsetsOf(context);
+  final minCap = math.max(0.0, minHeight);
+  final mq = MediaQuery.maybeOf(context);
+  if (mq == null) {
+    return minCap;
+  }
+  final size = mq.size;
+  final viewInsets = mq.viewInsets;
   final visibleHeight = math.max(0.0, size.height - viewInsets.bottom - extraBottomPadding);
   final cappedFraction = softCapFraction.clamp(0.1, 0.95).toDouble();
   final softCap = visibleHeight * cappedFraction;
   final available = visibleHeight - reservedHeight;
-  final minCap = math.max(0.0, minHeight);
 
   if (available > 0) {
     final capped = math.min(softCap, available);
     return math.max(minCap, capped);
   }
-  return math.max(minCap, softCap);
+  return minCap;
 }

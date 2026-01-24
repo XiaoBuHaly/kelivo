@@ -139,6 +139,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
   final GlobalKey _leftOverflowAnchorKey = GlobalKey(debugLabel: 'left-overflow-anchor');
   // Suppress context menu briefly after app resume to avoid flickering
   bool _suppressContextMenu = false;
+  String _lastText = '';
 
 
   void _addImages(List<String> paths) {
@@ -170,6 +171,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
   void initState() {
     super.initState();
     _controller = widget.controller ?? CodeLineEditingController();
+    _lastText = _controller.text;
     _controller.addListener(_onControllerChanged);
     _shortcutOverrideActions = {
       CodeShortcutNewLineIntent: _ComposingAwareNewLineAction(
@@ -184,6 +186,9 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
 
   // Listener for controller changes (replaces TextField's onChanged)
   void _onControllerChanged() {
+    final text = _controller.text;
+    if (text == _lastText) return;
+    _lastText = text;
     if (mounted) setState(() {});
   }
 
@@ -227,6 +232,22 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     if (oldWidget.searchEnabled != widget.searchEnabled) {
       _searchEnabled = widget.searchEnabled;
     }
+    if (oldWidget.controller != widget.controller) {
+      final oldController = _controller;
+      oldController.removeListener(_onControllerChanged);
+      if (widget.controller != null) {
+        _controller = widget.controller!;
+      } else {
+        final fallback = CodeLineEditingController();
+        fallback.value = oldController.value;
+        _controller = fallback;
+      }
+      _lastText = _controller.text;
+      _controller.addListener(_onControllerChanged);
+      if (oldWidget.controller == null && oldController != _controller) {
+        oldController.dispose();
+      }
+    }
   }
 
   String _hint(BuildContext context) {
@@ -267,6 +288,8 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
         ),
       ),
       textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      locale: Localizations.maybeLocaleOf(context),
       maxLines: maxLines,
     );
     painter.layout(maxWidth: maxWidth);
@@ -282,7 +305,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     final text = _controller.text.trim();
     if (text.isEmpty && _images.isEmpty && _docs.isEmpty) return;
     widget.onSend?.call(ChatInputData(text: text, imagePaths: List.of(_images), documents: List.of(_docs)));
-    _controller.text = ''; // Clear the editor
+    _controller.value = const CodeLineEditingValue.empty(); // Clear + reset selection/composing
     _images.clear();
     _docs.clear();
     setState(() {});
@@ -297,23 +320,40 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
   void _insertNewlineAtCursor() {
     // CodeLineEditingController has a built-in method to insert newlines
     _controller.applyNewLine();
-    setState(() {});
     _controller.makeCursorVisible();
   }
 
   Object? _handleNewLineIntent(CodeShortcutNewLineIntent intent) {
-    final isMobileLayout = MediaQuery.sizeOf(context).width < AppBreakpoints.tablet;
-    if (isMobileLayout) {
-      final enterToSendOnMobile = context.read<SettingsProvider>().enterToSendOnMobile;
-      if (!enterToSendOnMobile) {
-        _insertNewlineAtCursor();
-        return null;
-      }
-    }
     final keys = HardwareKeyboard.instance.logicalKeysPressed;
     final shift = keys.contains(LogicalKeyboardKey.shiftLeft) ||
         keys.contains(LogicalKeyboardKey.shiftRight);
-    if (shift) {
+    final ctrl = keys.contains(LogicalKeyboardKey.controlLeft) ||
+        keys.contains(LogicalKeyboardKey.controlRight);
+    final meta = keys.contains(LogicalKeyboardKey.metaLeft) ||
+        keys.contains(LogicalKeyboardKey.metaRight);
+    final ctrlOrMeta = ctrl || meta;
+
+    final isDesktopOs = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+    if (isDesktopOs) {
+      final sendShortcut = context.read<SettingsProvider>().desktopSendShortcut;
+      if (sendShortcut == DesktopSendShortcut.ctrlEnter) {
+        if (ctrlOrMeta) {
+          _handleSend();
+        } else {
+          _insertNewlineAtCursor();
+        }
+      } else {
+        if (shift || ctrlOrMeta) {
+          _insertNewlineAtCursor();
+        } else {
+          _handleSend();
+        }
+      }
+      return null;
+    }
+
+    final enterToSendOnMobile = context.read<SettingsProvider>().enterToSendOnMobile;
+    if (shift || !enterToSendOnMobile) {
       _insertNewlineAtCursor();
     } else {
       _handleSend();
@@ -344,51 +384,12 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     final isTabletOrDesktop = w >= AppBreakpoints.tablet;
     final isIosTablet = Platform.isIOS && isTabletOrDesktop;
 
-    final isDown = event is RawKeyDownEvent;
     final key = event.logicalKey;
-    final isEnter = key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter;
     final isArrow = key == LogicalKeyboardKey.arrowLeft || key == LogicalKeyboardKey.arrowRight;
     final isPasteV = key == LogicalKeyboardKey.keyV;
 
-    // Enter handling on tablet/desktop: configurable shortcut
-    if (isEnter && isTabletOrDesktop) {
-      final isDesktopOs = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
-      if (isDesktopOs) {
-        return KeyEventResult.ignored;
-      }
-      if (!isDown) return KeyEventResult.handled; // ignore key up
-      // Respect IME composition (e.g., Chinese Pinyin). If composing, let IME handle Enter.
-      final composingActive = _controller.isComposing;
-      if (composingActive) return KeyEventResult.ignored;
-      final keys = HardwareKeyboard.instance.logicalKeysPressed;
-      final shift = keys.contains(LogicalKeyboardKey.shiftLeft) || keys.contains(LogicalKeyboardKey.shiftRight);
-      final ctrl = keys.contains(LogicalKeyboardKey.controlLeft) || keys.contains(LogicalKeyboardKey.controlRight);
-      final meta = keys.contains(LogicalKeyboardKey.metaLeft) || keys.contains(LogicalKeyboardKey.metaRight);
-      final ctrlOrMeta = ctrl || meta;
-      // Get send shortcut setting
-      final sendShortcut = Provider.of<SettingsProvider>(node.context!, listen: false).desktopSendShortcut;
-      if (sendShortcut == DesktopSendShortcut.ctrlEnter) {
-        // Ctrl/Cmd+Enter to send, Enter to newline
-        if (ctrlOrMeta) {
-          _handleSend();
-        } else if (!shift) {
-          _insertNewlineAtCursor();
-        } else {
-          // Shift+Enter also newline
-          _insertNewlineAtCursor();
-        }
-      } else {
-        // Enter to send, Shift+Enter or Ctrl/Cmd+Enter to newline (default)
-        if (shift || ctrlOrMeta) {
-          _insertNewlineAtCursor();
-        } else {
-          _handleSend();
-        }
-      }
-      return KeyEventResult.handled;
-    }
-
     // Paste handling for images on iOS/macOS (tablet/desktop)
+    final isDown = event is RawKeyDownEvent;
     if (isDown && isPasteV) {
       final keys = HardwareKeyboard.instance.logicalKeysPressed;
       final meta = keys.contains(LogicalKeyboardKey.metaLeft) || keys.contains(LogicalKeyboardKey.metaRight);
@@ -1312,19 +1313,28 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
                           final enterToSendOnMobile = context.watch<SettingsProvider>().enterToSendOnMobile;
                           final fontSize = (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ? 14.0 : 15.0;
                           final fontHeight = 1.4;
+                          final baseFont = theme.textTheme.bodyLarge;
+                          final fontFamily = baseFont?.fontFamily;
+                          final fontFamilyFallback = baseFont?.fontFamilyFallback;
                           final maxLinesLimit = _isExpanded ? 25 : 5;
                           final verticalPadding = 8.0;
+                          const double overlayGutter = 28.0;
                           // Match CodeEditor's own padding so measurement width equals real content width.
                           // (Otherwise the wrap threshold will drift.)
-                          final contentPadding = EdgeInsets.symmetric(vertical: verticalPadding / 2, horizontal: 0);
+                          final contentPadding = EdgeInsets.fromLTRB(
+                            0,
+                            verticalPadding / 2,
+                            overlayGutter,
+                            verticalPadding / 2,
+                          );
 
                           final metrics = _measureInputMetrics(
                             context: ctx,
                             text: _controller.text,
                             maxWidth: math.max(0, constraints.maxWidth - contentPadding.horizontal),
                             fontSize: fontSize,
-                            fontFamily: null,
-                            fontFamilyFallback: null,
+                            fontFamily: fontFamily,
+                            fontFamilyFallback: fontFamilyFallback,
                             fontHeight: fontHeight,
                             verticalPadding: verticalPadding,
                             maxLines: maxLinesLimit,
@@ -1358,6 +1368,8 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
                                     padding: contentPadding,
                                     style: CodeEditorStyle(
                                       fontSize: fontSize,
+                                      fontFamily: fontFamily,
+                                      fontFamilyFallback: fontFamilyFallback,
                                       fontHeight: fontHeight,
                                       textColor: theme.colorScheme.onSurface,
                                       hintTextColor: theme.colorScheme.onSurface.withOpacity(0.45),
@@ -1680,10 +1692,12 @@ class _ComposingAwareNewLineAction extends Action<CodeShortcutNewLineIntent> {
   final Object? Function(CodeShortcutNewLineIntent) onInvoke;
 
   @override
-  Object? invoke(CodeShortcutNewLineIntent intent) => onInvoke(intent);
-
-  @override
-  bool isEnabled(CodeShortcutNewLineIntent intent) => !isComposing();
+  Object? invoke(CodeShortcutNewLineIntent intent) {
+    if (isComposing()) {
+      return null;
+    }
+    return onInvoke(intent);
+  }
 }
 
 class _ChatInputShortcutsActivatorsBuilder extends CodeShortcutsActivatorsBuilder {
@@ -1692,10 +1706,17 @@ class _ChatInputShortcutsActivatorsBuilder extends CodeShortcutsActivatorsBuilde
   @override
   List<ShortcutActivator>? build(CodeShortcutType type) {
     if (type == CodeShortcutType.newLine) {
-      return const [
+      final activators = <ShortcutActivator>[
         SingleActivator(LogicalKeyboardKey.enter),
         SingleActivator(LogicalKeyboardKey.enter, shift: true),
       ];
+      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        activators.addAll(const [
+          SingleActivator(LogicalKeyboardKey.enter, control: true),
+          SingleActivator(LogicalKeyboardKey.enter, meta: true),
+        ]);
+      }
+      return activators;
     }
     return const DefaultCodeShortcutsActivatorsBuilder().build(type);
   }

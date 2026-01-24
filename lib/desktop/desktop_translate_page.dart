@@ -144,7 +144,7 @@ class _DesktopTranslatePageState extends State<DesktopTranslatePage> {
 
     setState(() {
       _translating = true;
-      _output.text = '';
+      _output.value = const CodeLineEditingValue.empty();
     });
 
     try {
@@ -161,9 +161,9 @@ class _DesktopTranslatePageState extends State<DesktopTranslatePage> {
           // live update; remove leading whitespace on first chunk to avoid top gap
           final s = chunk.content;
           if (_output.text.isEmpty) {
-            _output.text = s.replaceFirst(RegExp(r'^\s+'), '');
+            _setOutputText(s.replaceFirst(RegExp(r'^\s+'), ''));
           } else {
-            _output.text += s;
+            _setOutputText('${_output.text}$s');
           }
         },
         onDone: () {
@@ -188,6 +188,21 @@ class _DesktopTranslatePageState extends State<DesktopTranslatePage> {
       await _subscription?.cancel();
     } catch (_) {}
     if (mounted) setState(() => _translating = false);
+  }
+
+  void _setOutputText(String text) {
+    if (text.isEmpty) {
+      _output.value = const CodeLineEditingValue.empty();
+      return;
+    }
+    final lines = text.codeLines;
+    final lastIndex = lines.length - 1;
+    final lastOffset = lines.last.length;
+    _output.value = CodeLineEditingValue(
+      codeLines: lines,
+      selection: CodeLineSelection.collapsed(index: lastIndex, offset: lastOffset),
+      composing: TextRange.empty,
+    );
   }
 
   @override
@@ -269,8 +284,8 @@ class _DesktopTranslatePageState extends State<DesktopTranslatePage> {
                                   icon: lucide.Lucide.Eraser,
                                   label: '清空',
                                   onTap: () {
-                                    _source.text = '';
-                                    _output.text = '';
+                                    _source.value = const CodeLineEditingValue.empty();
+                                    _output.value = const CodeLineEditingValue.empty();
                                   },
                                 ),
                                 child: CodeEditor(

@@ -79,7 +79,7 @@ class _TranslatePageState extends State<TranslatePage> {
     final lang = await showLanguageSelector(context);
     if (!mounted || lang == null) return;
     if (lang.code == '__clear__') {
-      setState(() => _dst.text = '');
+      setState(() => _dst.value = const CodeLineEditingValue.empty());
       return;
     }
     setState(() => _lang = lang);
@@ -104,7 +104,7 @@ class _TranslatePageState extends State<TranslatePage> {
 
     setState(() {
       _loading = true;
-      _dst.text = '';
+      _dst.value = const CodeLineEditingValue.empty();
     });
 
     try {
@@ -121,9 +121,9 @@ class _TranslatePageState extends State<TranslatePage> {
           if (_dst.text.isEmpty) {
             // Remove any leading whitespace/newlines from the first chunk to avoid top gap
             final cleaned = s.replaceFirst(RegExp(r'^\s+'), '');
-            _dst.text = cleaned;
+            _setOutputText(cleaned);
           } else {
-            _dst.text += s;
+            _setOutputText('${_dst.text}$s');
           }
         },
         onError: (e) {
@@ -141,6 +141,21 @@ class _TranslatePageState extends State<TranslatePage> {
       setState(() => _loading = false);
       showAppSnackBar(context, message: l10n.homePageTranslateFailed(e.toString()), type: NotificationType.error);
     }
+  }
+
+  void _setOutputText(String text) {
+    if (text.isEmpty) {
+      _dst.value = const CodeLineEditingValue.empty();
+      return;
+    }
+    final lines = text.codeLines;
+    final lastIndex = lines.length - 1;
+    final lastOffset = lines.last.length;
+    _dst.value = CodeLineEditingValue(
+      codeLines: lines,
+      selection: CodeLineSelection.collapsed(index: lastIndex, offset: lastOffset),
+      composing: TextRange.empty,
+    );
   }
 
   Future<void> _stop() async {
@@ -187,7 +202,10 @@ class _TranslatePageState extends State<TranslatePage> {
 
   Future<void> _clearAll() async {
     await _stop();
-    setState(() { _src.text = ''; _dst.text = ''; });
+    setState(() {
+      _src.value = const CodeLineEditingValue.empty();
+      _dst.value = const CodeLineEditingValue.empty();
+    });
   }
 
   @override
