@@ -356,9 +356,44 @@ class _InstructionInjectionEditDialogState extends State<_InstructionInjectionEd
   @override
   void initState() {
     super.initState();
-    // TODO: If this dialog is reused with different initial values, update controllers in didUpdateWidget to avoid stale title/prompt content.
     _titleController = TextEditingController(text: widget.initTitle);
     _promptController = CodeLineEditingController.fromText(widget.initPrompt);
+  }
+
+  @override
+  void didUpdateWidget(covariant _InstructionInjectionEditDialog oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initTitle != widget.initTitle &&
+        _titleController.text == oldWidget.initTitle) {
+      _syncTitleText(widget.initTitle);
+    }
+    if (oldWidget.initPrompt != widget.initPrompt &&
+        _promptController.text == oldWidget.initPrompt) {
+      _syncPromptText(widget.initPrompt);
+    }
+  }
+
+  void _syncTitleText(String text) {
+    _titleController.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+      composing: TextRange.empty,
+    );
+  }
+
+  void _syncPromptText(String text) {
+    if (text.isEmpty) {
+      _promptController.value = const CodeLineEditingValue.empty();
+      return;
+    }
+    final lines = text.codeLines;
+    final lastIndex = lines.length - 1;
+    final lastOffset = lines.last.length;
+    _promptController.value = CodeLineEditingValue(
+      codeLines: lines,
+      selection: CodeLineSelection.collapsed(index: lastIndex, offset: lastOffset),
+      composing: TextRange.empty,
+    );
   }
 
   @override

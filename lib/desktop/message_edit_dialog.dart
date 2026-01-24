@@ -34,7 +34,8 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
   @override
   void didUpdateWidget(covariant _MessageEditDesktopDialog oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.message.content != widget.message.content) {
+    if (oldWidget.message.content != widget.message.content &&
+        _controller.text == oldWidget.message.content) {
       _syncControllerText(widget.message.content);
     }
   }
@@ -44,6 +45,7 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
       _controller.value = const CodeLineEditingValue.empty();
       return;
     }
+    // TODO: Guard codeLines conversion with try/catch to avoid crashes on unexpected input.
     final lines = text.codeLines;
     final lastIndex = lines.length - 1;
     final lastOffset = lines.last.length;
@@ -87,6 +89,7 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
                       const Spacer(),
                       TextButton.icon(
                         onPressed: () {
+                          // TODO: Prevent saving/sending empty content (align with global send guards).
                           final text = _controller.text.trim();
                           Navigator.of(context).pop<MessageEditResult>(
                             MessageEditResult(content: text, shouldSend: true),
@@ -98,6 +101,7 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
                       const SizedBox(width: 4),
                       TextButton.icon(
                         onPressed: () {
+                          // TODO: Prevent saving empty content (align with global send guards).
                           final text = _controller.text.trim();
                           Navigator.of(context).pop<MessageEditResult>(
                             MessageEditResult(content: text, shouldSend: false),

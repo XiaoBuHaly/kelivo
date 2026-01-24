@@ -394,9 +394,46 @@ class _InstructionInjectionEditSheetState extends State<_InstructionInjectionEdi
   @override
   void initState() {
     super.initState();
-    // TODO: If this sheet is rebuilt with a different item, update controllers in didUpdateWidget to avoid stale title/prompt content.
     _titleController = TextEditingController(text: widget.item?.title ?? '');
     _promptController = CodeLineEditingController.fromText(widget.item?.prompt ?? '');
+  }
+
+  @override
+  void didUpdateWidget(covariant _InstructionInjectionEditSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldTitle = oldWidget.item?.title ?? '';
+    final newTitle = widget.item?.title ?? '';
+    if (oldTitle != newTitle && _titleController.text == oldTitle) {
+      _syncTitleText(newTitle);
+    }
+    final oldPrompt = oldWidget.item?.prompt ?? '';
+    final newPrompt = widget.item?.prompt ?? '';
+    if (oldPrompt != newPrompt && _promptController.text == oldPrompt) {
+      _syncPromptText(newPrompt);
+    }
+  }
+
+  void _syncTitleText(String text) {
+    _titleController.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+      composing: TextRange.empty,
+    );
+  }
+
+  void _syncPromptText(String text) {
+    if (text.isEmpty) {
+      _promptController.value = const CodeLineEditingValue.empty();
+      return;
+    }
+    final lines = text.codeLines;
+    final lastIndex = lines.length - 1;
+    final lastOffset = lines.last.length;
+    _promptController.value = CodeLineEditingValue(
+      codeLines: lines,
+      selection: CodeLineSelection.collapsed(index: lastIndex, offset: lastOffset),
+      composing: TextRange.empty,
+    );
   }
 
   @override

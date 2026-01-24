@@ -5,6 +5,7 @@ import 'package:flutter/services.dart' show rootBundle;
 class MarkdownPreviewHtmlBuilder {
   static Future<String> buildFromMarkdown(BuildContext context, String markdown) async {
     final cs = Theme.of(context).colorScheme;
+    // TODO: Handle rootBundle.loadString failures (missing asset / read error) with a safe fallback.
     final template = await rootBundle.loadString('assets/html/mark.html');
     // TODO: Confirm token semantics; BACKGROUND vs SURFACE (and ON_* variants) currently map to the same colors.
     return template

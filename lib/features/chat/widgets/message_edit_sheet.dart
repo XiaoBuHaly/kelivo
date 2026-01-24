@@ -37,7 +37,8 @@ class _MessageEditSheetState extends State<_MessageEditSheet> {
   @override
   void didUpdateWidget(covariant _MessageEditSheet oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.message.content != widget.message.content) {
+    if (oldWidget.message.content != widget.message.content &&
+        _controller.text == oldWidget.message.content) {
       _syncControllerText(widget.message.content);
     }
   }
@@ -47,6 +48,7 @@ class _MessageEditSheetState extends State<_MessageEditSheet> {
       _controller.value = const CodeLineEditingValue.empty();
       return;
     }
+    // TODO: Guard codeLines conversion with try/catch to avoid crashes on unexpected input.
     final lines = text.codeLines;
     final lastIndex = lines.length - 1;
     final lastOffset = lines.last.length;
@@ -93,6 +95,7 @@ class _MessageEditSheetState extends State<_MessageEditSheet> {
                       child: IosCardPress(
                         onTap: () {
                           Haptics.light();
+                          // TODO: Prevent saving/sending empty content (align with global send guards).
                           final text = _controller.text.trim();
                           Navigator.of(context).pop<MessageEditResult>(
                             MessageEditResult(content: text, shouldSend: true),
@@ -117,6 +120,7 @@ class _MessageEditSheetState extends State<_MessageEditSheet> {
                       child: IosCardPress(
                         onTap: () {
                           Haptics.light();
+                          // TODO: Prevent saving empty content (align with global send guards).
                           final text = _controller.text.trim();
                           Navigator.of(context).pop<MessageEditResult>(
                             MessageEditResult(content: text, shouldSend: false),
