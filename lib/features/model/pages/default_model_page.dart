@@ -195,12 +195,13 @@ class DefaultModelPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 Builder(
                   builder: (innerCtx) {
-                    final maxPromptHeight = computeInputMaxHeight(
+                    final rawMaxPromptHeight = computeInputMaxHeight(
                       context: innerCtx,
                       reservedHeight: 220,
                       softCapFraction: 0.45,
                       minHeight: 120,
                     );
+                    final maxPromptHeight = rawMaxPromptHeight < 120 ? 120.0 : rawMaxPromptHeight;
                     return ConstrainedBox(
                       constraints: BoxConstraints(minHeight: 120, maxHeight: maxPromptHeight),
                       child: TextField(
@@ -284,12 +285,13 @@ class DefaultModelPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 Builder(
                   builder: (innerCtx) {
-                    final maxPromptHeight = computeInputMaxHeight(
+                    final rawMaxPromptHeight = computeInputMaxHeight(
                       context: innerCtx,
                       reservedHeight: 220,
                       softCapFraction: 0.45,
                       minHeight: 120,
                     );
+                    final maxPromptHeight = rawMaxPromptHeight < 120 ? 120.0 : rawMaxPromptHeight;
                     return ConstrainedBox(
                       constraints: BoxConstraints(minHeight: 120, maxHeight: maxPromptHeight),
                       child: TextField(
@@ -373,12 +375,13 @@ class DefaultModelPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 Builder(
                   builder: (innerCtx) {
-                    final maxPromptHeight = computeInputMaxHeight(
+                    final rawMaxPromptHeight = computeInputMaxHeight(
                       context: innerCtx,
                       reservedHeight: 220,
                       softCapFraction: 0.45,
                       minHeight: 120,
                     );
+                    final maxPromptHeight = rawMaxPromptHeight < 120 ? 120.0 : rawMaxPromptHeight;
                     return ConstrainedBox(
                       constraints: BoxConstraints(minHeight: 120, maxHeight: maxPromptHeight),
                       child: TextField(

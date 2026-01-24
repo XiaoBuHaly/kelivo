@@ -302,6 +302,14 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
   }
 
   Object? _handleNewLineIntent(CodeShortcutNewLineIntent intent) {
+    final isMobileLayout = MediaQuery.sizeOf(context).width < AppBreakpoints.tablet;
+    if (isMobileLayout) {
+      final enterToSendOnMobile = context.read<SettingsProvider>().enterToSendOnMobile;
+      if (!enterToSendOnMobile) {
+        _insertNewlineAtCursor();
+        return null;
+      }
+    }
     final keys = HardwareKeyboard.instance.logicalKeysPressed;
     final shift = keys.contains(LogicalKeyboardKey.shiftLeft) ||
         keys.contains(LogicalKeyboardKey.shiftRight);

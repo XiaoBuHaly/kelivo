@@ -179,12 +179,13 @@ class DesktopDefaultModelPane extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
-        final maxPromptHeight = computeInputMaxHeight(
+        final rawMaxPromptHeight = computeInputMaxHeight(
           context: ctx,
           reservedHeight: 220,
           softCapFraction: 0.6,
           minHeight: 160,
         );
+        final maxPromptHeight = rawMaxPromptHeight < 160 ? 160.0 : rawMaxPromptHeight;
         return Dialog(
           backgroundColor: cs.surface,
           shape: RoundedRectangleBorder(
@@ -282,12 +283,13 @@ class DesktopDefaultModelPane extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
-        final maxPromptHeight = computeInputMaxHeight(
+        final rawMaxPromptHeight = computeInputMaxHeight(
           context: ctx,
           reservedHeight: 220,
           softCapFraction: 0.6,
           minHeight: 160,
         );
+        final maxPromptHeight = rawMaxPromptHeight < 160 ? 160.0 : rawMaxPromptHeight;
         return Dialog(
           backgroundColor: cs.surface,
           shape: RoundedRectangleBorder(
@@ -388,12 +390,13 @@ class DesktopDefaultModelPane extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
-        final maxPromptHeight = computeInputMaxHeight(
+        final rawMaxPromptHeight = computeInputMaxHeight(
           context: ctx,
           reservedHeight: 220,
           softCapFraction: 0.6,
           minHeight: 160,
         );
+        final maxPromptHeight = rawMaxPromptHeight < 160 ? 160.0 : rawMaxPromptHeight;
         return Dialog(
           backgroundColor: cs.surface,
           shape: RoundedRectangleBorder(
@@ -483,12 +486,13 @@ class DesktopDefaultModelPane extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
-        final maxPromptHeight = computeInputMaxHeight(
+        final rawMaxPromptHeight = computeInputMaxHeight(
           context: ctx,
           reservedHeight: 220,
           softCapFraction: 0.6,
           minHeight: 160,
         );
+        final maxPromptHeight = rawMaxPromptHeight < 160 ? 160.0 : rawMaxPromptHeight;
         return Dialog(
           backgroundColor: cs.surface,
           shape: RoundedRectangleBorder(
