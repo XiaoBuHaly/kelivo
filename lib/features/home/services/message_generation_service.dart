@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import '../../../core/models/assistant.dart';
 import '../../../core/models/chat_input_data.dart';
@@ -69,6 +70,12 @@ class MessageGenerationService {
   OnShowWarning? onShowWarning;
   OnHapticFeedback? onHapticFeedback;
 
+  /// Called when file processing starts.
+  VoidCallback? onFileProcessingStarted;
+
+  /// Called when file processing finishes.
+  VoidCallback? onFileProcessingFinished;
+
   /// Check if reasoning is enabled for given budget
   bool isReasoningEnabled(int? budget) {
     if (budget == null) return true;
@@ -91,6 +98,8 @@ class MessageGenerationService {
     final kind = ProviderConfig.classify(providerKey, explicitType: cfg.providerType);
     final includeOpenAIToolMessages = kind == ProviderKind.openai;
 
+    onFileProcessingStarted?.call();
+
     // Build API messages
     final apiMessages = messageBuilderService.buildApiMessages(
       messages: messages,
@@ -105,6 +114,9 @@ class MessageGenerationService {
       settings,
       assistant,
     );
+
+    // Signal processing finished
+    onFileProcessingFinished?.call();
 
     // Inject prompts
     messageBuilderService.injectSystemPrompt(apiMessages, assistant, modelId);

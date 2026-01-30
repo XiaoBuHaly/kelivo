@@ -2483,6 +2483,18 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get backupPageDeleteTooltip;
 
+  /// No description provided for @backupPageDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Deletion'**
+  String get backupPageDeleteConfirmTitle;
+
+  /// No description provided for @backupPageDeleteConfirmContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete remote backup \"{name}\"? This action cannot be undone.'**
+  String backupPageDeleteConfirmContent(Object name);
+
   /// No description provided for @backupPageBackupManagement.
   ///
   /// In en, this message translates to:
@@ -6830,6 +6842,18 @@ abstract class AppLocalizations {
   /// **'Password'**
   String get networkProxyPassword;
 
+  /// No description provided for @networkProxyBypassLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Proxy bypass'**
+  String get networkProxyBypassLabel;
+
+  /// No description provided for @networkProxyBypassHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma-separated hosts/CIDR, e.g. localhost,127.0.0.1,192.168.0.0/16,*.local'**
+  String get networkProxyBypassHint;
+
   /// No description provided for @networkProxyOptionalHint.
   ///
   /// In en, this message translates to:
@@ -7147,6 +7171,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to clear this summary?'**
   String get assistantEditDeleteSummaryContent;
+
+  /// No description provided for @homePageProcessingFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing files...'**
+  String get homePageProcessingFiles;
+
+  /// No description provided for @fileUploadDuplicateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'File already exists'**
+  String get fileUploadDuplicateTitle;
+
+  /// No description provided for @fileUploadDuplicateContent.
+  ///
+  /// In en, this message translates to:
+  /// **'A file named {fileName} already exists. Use the existing file?'**
+  String fileUploadDuplicateContent(String fileName);
+
+  /// No description provided for @fileUploadDuplicateUseExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Use existing'**
+  String get fileUploadDuplicateUseExisting;
+
+  /// No description provided for @fileUploadDuplicateUploadNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload new'**
+  String get fileUploadDuplicateUploadNew;
 }
 
 class _AppLocalizationsDelegate

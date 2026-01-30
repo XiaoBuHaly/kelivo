@@ -94,6 +94,10 @@
   "languageDisplayGerman": "Deutsch",
   "languageDisplayItalian": "Italiano",
   "languageDisplaySpanish": "Español",
+  "fileUploadDuplicateTitle": "文件已存在",
+  "fileUploadDuplicateContent": "检测到同名文件 {fileName}，是否使用现有文件？",
+  "fileUploadDuplicateUseExisting": "使用现有",
+  "fileUploadDuplicateUploadNew": "重新上传",
   "languageSelectSheetTitle": "选择翻译语言",
   "languageSelectSheetClearButton": "清空翻译",
   "assistantEditPageTitle": "助手",
@@ -1192,6 +1196,8 @@
   "networkProxyPort": "端口",
   "networkProxyUsername": "用户名",
   "networkProxyPassword": "密码",
+  "networkProxyBypassLabel": "代理绕过",
+  "networkProxyBypassHint": "用逗号分隔的主机或 CIDR，例如：localhost,127.0.0.1,192.168.0.0/16,*.local",
   "networkProxyOptionalHint": "可选",
   "networkProxyTestHeader": "连接测试",
   "networkProxyTestUrlHint": "测试地址",
@@ -1241,5 +1247,7 @@
   "logViewerSectionResponseBody": "响应体",
   "logViewerSectionWarnings": "警告",
   "logViewerErrorTitle": "错误",
-  "logViewerMoreCount": "+{count} 条更多"
+  "logViewerMoreCount": "+{count} 条更多",
+  "backupPageDeleteConfirmTitle": "确认删除",
+  "backupPageDeleteConfirmContent": "确定要删除远程备份“{name}”吗？此操作不可撤销。"
 }

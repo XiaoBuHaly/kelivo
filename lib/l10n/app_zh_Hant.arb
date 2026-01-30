@@ -1192,6 +1192,8 @@
   "networkProxyPort": "連接埠",
   "networkProxyUsername": "使用者名稱",
   "networkProxyPassword": "密碼",
+  "networkProxyBypassLabel": "代理繞過",
+  "networkProxyBypassHint": "以逗號分隔的主機或 CIDR，例如：localhost,127.0.0.1,192.168.0.0/16,*.local",
   "networkProxyOptionalHint": "可選",
   "networkProxyTestHeader": "連線測試",
   "networkProxyTestUrlHint": "測試地址",
@@ -1247,5 +1249,11 @@
   "assistantEditSummaryDialogTitle": "編輯摘要",
   "assistantEditSummaryDialogHint": "輸入摘要內容",
   "assistantEditDeleteSummaryTitle": "清除摘要",
-  "assistantEditDeleteSummaryContent": "確定要清除此摘要嗎？"
+  "assistantEditDeleteSummaryContent": "確定要清除此摘要嗎？",
+  "fileUploadDuplicateTitle": "檔案已存在",
+  "fileUploadDuplicateContent": "偵測到同名檔案 {fileName}，是否使用現有檔案？",
+  "fileUploadDuplicateUseExisting": "使用現有",
+  "fileUploadDuplicateUploadNew": "重新上傳",
+  "backupPageDeleteConfirmTitle": "確認刪除",
+  "backupPageDeleteConfirmContent": "確定要刪除遠端備份「{name}」嗎？此操作不可撤銷。"
 }

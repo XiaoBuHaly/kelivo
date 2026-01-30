@@ -1241,6 +1241,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupPageDeleteTooltip => '删除';
 
   @override
+  String get backupPageDeleteConfirmTitle => '确认删除';
+
+  @override
+  String backupPageDeleteConfirmContent(Object name) {
+    return '确定要删除远程备份“$name”吗？此操作不可撤销。';
+  }
+
+  @override
   String get backupPageBackupManagement => '备份管理';
 
   @override
@@ -3509,6 +3517,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get networkProxyPassword => '密码';
 
   @override
+  String get networkProxyBypassLabel => '代理绕过';
+
+  @override
+  String get networkProxyBypassHint =>
+      '用逗号分隔的主机或 CIDR，例如：localhost,127.0.0.1,192.168.0.0/16,*.local';
+
+  @override
   String get networkProxyOptionalHint => '可选';
 
   @override
@@ -3673,6 +3688,23 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get assistantEditDeleteSummaryContent => '确定要清除此摘要吗？';
+
+  @override
+  String get homePageProcessingFiles => '正在解析文件……';
+
+  @override
+  String get fileUploadDuplicateTitle => '文件已存在';
+
+  @override
+  String fileUploadDuplicateContent(String fileName) {
+    return '检测到同名文件 $fileName，是否使用已有文件？';
+  }
+
+  @override
+  String get fileUploadDuplicateUseExisting => '使用已有';
+
+  @override
+  String get fileUploadDuplicateUploadNew => '重新上传';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hans`).
@@ -4910,6 +4942,14 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
 
   @override
   String get backupPageDeleteTooltip => '删除';
+
+  @override
+  String get backupPageDeleteConfirmTitle => '确认删除';
+
+  @override
+  String backupPageDeleteConfirmContent(Object name) {
+    return '确定要删除远程备份“$name”吗？此操作不可撤销。';
+  }
 
   @override
   String get backupPageBackupManagement => '备份管理';
@@ -7163,6 +7203,13 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get networkProxyPassword => '密码';
 
   @override
+  String get networkProxyBypassLabel => '代理绕过';
+
+  @override
+  String get networkProxyBypassHint =>
+      '用逗号分隔的主机或 CIDR，例如：localhost,127.0.0.1,192.168.0.0/16,*.local';
+
+  @override
   String get networkProxyOptionalHint => '可选';
 
   @override
@@ -7309,6 +7356,20 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String logViewerMoreCount(int count) {
     return '+$count 条更多';
   }
+
+  @override
+  String get fileUploadDuplicateTitle => '文件已存在';
+
+  @override
+  String fileUploadDuplicateContent(String fileName) {
+    return '检测到同名文件 $fileName，是否使用现有文件？';
+  }
+
+  @override
+  String get fileUploadDuplicateUseExisting => '使用现有';
+
+  @override
+  String get fileUploadDuplicateUploadNew => '重新上传';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -8546,6 +8607,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get backupPageDeleteTooltip => '刪除';
+
+  @override
+  String get backupPageDeleteConfirmTitle => '確認刪除';
+
+  @override
+  String backupPageDeleteConfirmContent(Object name) {
+    return '確定要刪除遠端備份「$name」嗎？此操作不可撤銷。';
+  }
 
   @override
   String get backupPageBackupManagement => '備份管理';
@@ -10816,6 +10885,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get networkProxyPassword => '密碼';
 
   @override
+  String get networkProxyBypassLabel => '代理繞過';
+
+  @override
+  String get networkProxyBypassHint =>
+      '以逗號分隔的主機或 CIDR，例如：localhost,127.0.0.1,192.168.0.0/16,*.local';
+
+  @override
   String get networkProxyOptionalHint => '可選';
 
   @override
@@ -10980,4 +11056,18 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get assistantEditDeleteSummaryContent => '確定要清除此摘要嗎？';
+
+  @override
+  String get fileUploadDuplicateTitle => '檔案已存在';
+
+  @override
+  String fileUploadDuplicateContent(String fileName) {
+    return '偵測到同名檔案 $fileName，是否使用現有檔案？';
+  }
+
+  @override
+  String get fileUploadDuplicateUseExisting => '使用現有';
+
+  @override
+  String get fileUploadDuplicateUploadNew => '重新上傳';
 }

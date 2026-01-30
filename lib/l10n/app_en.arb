@@ -538,6 +538,8 @@
   "backupPageNoBackups": "No backups",
   "backupPageRestoreTooltip": "Restore",
   "backupPageDeleteTooltip": "Delete",
+  "backupPageDeleteConfirmTitle": "Confirm Deletion",
+  "backupPageDeleteConfirmContent": "Are you sure you want to delete remote backup \"{name}\"? This action cannot be undone.",
   "backupPageBackupManagement": "Backup Management",
   "backupPageWebDavBackup": "WebDAV Backup",
   "backupPageWebDavServerSettings": "WebDAV Server Settings",
@@ -1496,6 +1498,8 @@
   "networkProxyPort": "Port",
   "networkProxyUsername": "Username",
   "networkProxyPassword": "Password",
+  "networkProxyBypassLabel": "Proxy bypass",
+  "networkProxyBypassHint": "Comma-separated hosts/CIDR, e.g. localhost,127.0.0.1,192.168.0.0/16,*.local",
   "networkProxyOptionalHint": "Optional",
   "networkProxyTestHeader": "Connection Test",
   "networkProxyTestUrlHint": "Test URL",
@@ -1568,5 +1572,17 @@
   "assistantEditSummaryDialogTitle": "Edit Summary",
   "assistantEditSummaryDialogHint": "Enter summary content",
   "assistantEditDeleteSummaryTitle": "Clear Summary",
-  "assistantEditDeleteSummaryContent": "Are you sure you want to clear this summary?"
+  "assistantEditDeleteSummaryContent": "Are you sure you want to clear this summary?",
+  "homePageProcessingFiles": "Processing files...",
+  "fileUploadDuplicateTitle": "File already exists",
+  "fileUploadDuplicateContent": "A file named {fileName} already exists. Use the existing file?",
+  "@fileUploadDuplicateContent": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "fileUploadDuplicateUseExisting": "Use existing",
+  "fileUploadDuplicateUploadNew": "Upload new"
 }

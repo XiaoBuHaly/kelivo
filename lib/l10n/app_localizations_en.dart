@@ -1275,6 +1275,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupPageDeleteTooltip => 'Delete';
 
   @override
+  String get backupPageDeleteConfirmTitle => 'Confirm Deletion';
+
+  @override
+  String backupPageDeleteConfirmContent(Object name) {
+    return 'Are you sure you want to delete remote backup \"$name\"? This action cannot be undone.';
+  }
+
+  @override
   String get backupPageBackupManagement => 'Backup Management';
 
   @override
@@ -3642,6 +3650,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get networkProxyPassword => 'Password';
 
   @override
+  String get networkProxyBypassLabel => 'Proxy bypass';
+
+  @override
+  String get networkProxyBypassHint =>
+      'Comma-separated hosts/CIDR, e.g. localhost,127.0.0.1,192.168.0.0/16,*.local';
+
+  @override
   String get networkProxyOptionalHint => 'Optional';
 
   @override
@@ -3811,4 +3826,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get assistantEditDeleteSummaryContent =>
       'Are you sure you want to clear this summary?';
+
+  @override
+  String get homePageProcessingFiles => 'Processing files...';
+
+  @override
+  String get fileUploadDuplicateTitle => 'File already exists';
+
+  @override
+  String fileUploadDuplicateContent(String fileName) {
+    return 'A file named $fileName already exists. Use the existing file?';
+  }
+
+  @override
+  String get fileUploadDuplicateUseExisting => 'Use existing';
+
+  @override
+  String get fileUploadDuplicateUploadNew => 'Upload new';
 }

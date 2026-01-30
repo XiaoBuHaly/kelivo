@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:path/path.dart' as p;
 
 import '../../../l10n/app_localizations.dart';
+import '../../../shared/dialogs/file_duplicate_dialog.dart';
 import '../../../utils/app_directories.dart';
+import '../../../utils/file_import_helper.dart';
 import '../../../utils/platform_utils.dart';
 import '../../../shared/widgets/snackbar.dart';
 import '../../../core/models/chat_input_data.dart';
@@ -21,12 +24,16 @@ import '../widgets/chat_input_bar.dart';
 /// - 文件复制到应用目录
 class FileUploadService {
   FileUploadService({
+    required BuildContext Function() getContext,
     required this.mediaController,
     required this.onScrollToBottom,
-  });
+  }) : _getContext = getContext;
 
   /// 媒体控制器，用于添加图片和文件到输入栏
   final ChatInputBarController mediaController;
+
+  /// Context provider callback to avoid storing stale context
+  final BuildContext Function() _getContext;
 
   /// 滚动到底部的回调
   final VoidCallback onScrollToBottom;
@@ -37,20 +44,17 @@ class FileUploadService {
   /// 返回复制后的文件路径列表
   Future<List<String>> copyPickedFiles(List<XFile> files) async {
     final dir = await AppDirectories.getUploadDirectory();
-    if (!await dir.exists()) {
-      await dir.create(recursive: true);
-    }
     final out = <String>[];
+    final context = _getContext();
     for (final f in files) {
-      try {
-        final name = f.name.isNotEmpty ? f.name : DateTime.now().millisecondsSinceEpoch.toString();
-        final dest = File("${dir.path}/$name");
-        await dest.writeAsBytes(await f.readAsBytes());
-        out.add(dest.path);
-      } catch (_) {}
+      final savedPath = await FileImportHelper.copyXFile(f, dir, context);
+      if (savedPath != null) {
+        out.add(savedPath);
+      }
     }
     return out;
   }
+
 
   /// 从相册选取图片
   Future<void> onPickPhotos() async {
@@ -213,12 +217,12 @@ class FileUploadService {
       for (int i = 0; i < saved.length; i++) {
         final savedPath = saved[i];
         final isImage = kinds[i];
+        final savedName = p.basename(savedPath);
         if (isImage) {
           images.add(savedPath);
         } else {
-          final name = names[i];
-          final mime = inferMimeByExtension(name);
-          docs.add(DocumentAttachment(path: savedPath, fileName: name, mime: mime));
+          final mime = inferMimeByExtension(savedName);
+          docs.add(DocumentAttachment(path: savedPath, fileName: savedName, mime: mime));
         }
       }
       if (images.isNotEmpty) {
@@ -254,12 +258,12 @@ class FileUploadService {
       for (int i = 0; i < saved.length; i++) {
         final savedPath = saved[i];
         final isImage = kinds[i];
+        final savedName = p.basename(savedPath);
         if (isImage) {
           images.add(savedPath);
         } else {
-          final name = names[i];
-          final mime = inferMimeByExtension(name);
-          docs.add(DocumentAttachment(path: savedPath, fileName: name, mime: mime));
+          final mime = inferMimeByExtension(savedName);
+          docs.add(DocumentAttachment(path: savedPath, fileName: savedName, mime: mime));
         }
       }
       if (images.isNotEmpty) mediaController.addImages(images);
