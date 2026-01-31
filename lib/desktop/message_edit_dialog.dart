@@ -96,8 +96,8 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
                       const Spacer(),
                       TextButton.icon(
                         onPressed: () {
-                          // TODO: Prevent saving/sending empty content (align with global send guards).
                           final text = _controller.text.trim();
+                          if (text.isEmpty) return;
                           Navigator.of(context).pop<MessageEditResult>(
                             MessageEditResult(content: text, shouldSend: true),
                           );
@@ -108,8 +108,8 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
                       const SizedBox(width: 4),
                       TextButton.icon(
                         onPressed: () {
-                          // TODO: Prevent saving empty content (align with global send guards).
                           final text = _controller.text.trim();
+                          if (text.isEmpty) return;
                           Navigator.of(context).pop<MessageEditResult>(
                             MessageEditResult(content: text, shouldSend: false),
                           );
@@ -120,7 +120,7 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
                       IconButton(
                         tooltip: l10n.mcpPageClose,
                         onPressed: () => Navigator.of(context).maybePop(),
-                        icon: Icon(Lucide.X, size: 18, color: cs.onSurface.withOpacity(0.75)),
+                      icon: Icon(Lucide.X, size: 18, color: cs.onSurface.withValues(alpha: 0.75)),
                       ),
                     ],
                   ),
@@ -135,7 +135,7 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
                         color: isDark ? Colors.white10 : const Color(0xFFF7F7F9),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: cs.outlineVariant.withOpacity(0.18),
+                          color: cs.outlineVariant.withValues(alpha: 0.18),
                           width: 0.6,
                         ),
                       ),
@@ -152,10 +152,10 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
                           fontSize: 15,
                           fontHeight: 1.5,
                           textColor: cs.onSurface,
-                          hintTextColor: cs.onSurface.withOpacity(0.5),
+                          hintTextColor: cs.onSurface.withValues(alpha: 0.5),
                           cursorColor: cs.primary,
                           backgroundColor: Colors.transparent,
-                          selectionColor: cs.primary.withOpacity(0.3),
+                          selectionColor: cs.primary.withValues(alpha: 0.3),
                         ),
                       ),
                     ),

@@ -32,6 +32,7 @@ class _TranslatePageState extends State<TranslatePage> {
   String? _modelId;
   StreamSubscription? _sub;
   bool _loading = false;
+  int _translateRunId = 0;
 
   @override
   void initState() {
@@ -79,7 +80,7 @@ class _TranslatePageState extends State<TranslatePage> {
     final lang = await showLanguageSelector(context);
     if (!mounted || lang == null) return;
     if (lang.code == '__clear__') {
-      // TODO: Decide whether clearing the language selector should also reset the selected language state (_lang) to a default/unset value.
+      // TODO: When clearing language, also reset _lang (and persist) to avoid UI/state mismatch.
       setState(() => _dst.value = const CodeLineEditingValue.empty());
       return;
     }
@@ -88,9 +89,16 @@ class _TranslatePageState extends State<TranslatePage> {
   }
 
   Future<void> _translate() async {
-    final l10n = AppLocalizations.of(context)!;
     final txt = _src.text.trim();
     if (txt.isEmpty) return;
+    if (_loading) {
+      await _stop();
+      if (!mounted) return;
+    }
+    await _sub?.cancel();
+    _sub = null;
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     final pk = _providerKey;
     final mid = _modelId;
     if (pk == null || mid == null) {
@@ -108,6 +116,22 @@ class _TranslatePageState extends State<TranslatePage> {
       _dst.value = const CodeLineEditingValue.empty();
     });
 
+    final runId = ++_translateRunId;
+    final buffer = StringBuffer();
+    Timer? flushTimer;
+    void flushNow() {
+      if (!mounted || runId != _translateRunId) return;
+      _setOutputText(buffer.toString());
+    }
+
+    void scheduleFlush() {
+      if (flushTimer?.isActive ?? false) return;
+      flushTimer = Timer(const Duration(milliseconds: 80), () {
+        flushTimer = null;
+        flushNow();
+      });
+    }
+
     try {
       final stream = ChatApiService.sendMessageStream(
         config: cfg,
@@ -118,28 +142,37 @@ class _TranslatePageState extends State<TranslatePage> {
       );
       _sub = stream.listen(
         (chunk) {
+          if (runId != _translateRunId) return;
           final s = chunk.content;
-          if (_dst.text.isEmpty) {
+          if (buffer.isEmpty) {
             // Remove any leading whitespace/newlines from the first chunk to avoid top gap
             final cleaned = s.replaceFirst(RegExp(r'^\s+'), '');
-            _setOutputText(cleaned);
+            buffer.write(cleaned);
           } else {
-            // TODO: Avoid repeated string concatenation during streaming (consider buffering / incremental append).
-            _setOutputText('${_dst.text}$s');
+            buffer.write(s);
           }
+          scheduleFlush();
         },
         onError: (e) {
-          if (!mounted) return;
+          if (!mounted || runId != _translateRunId) return;
+          flushTimer?.cancel();
+          flushNow();
+          _sub = null;
           setState(() => _loading = false);
           showAppSnackBar(context, message: l10n.homePageTranslateFailed(e.toString()), type: NotificationType.error);
         },
         onDone: () {
-          if (!mounted) return;
+          if (!mounted || runId != _translateRunId) return;
+          flushTimer?.cancel();
+          flushNow();
+          _sub = null;
           setState(() => _loading = false);
         },
         cancelOnError: true,
       );
     } catch (e) {
+      _sub = null;
+      if (!mounted) return;
       setState(() => _loading = false);
       showAppSnackBar(context, message: l10n.homePageTranslateFailed(e.toString()), type: NotificationType.error);
     }
@@ -162,6 +195,8 @@ class _TranslatePageState extends State<TranslatePage> {
 
   Future<void> _stop() async {
     try { await _sub?.cancel(); } catch (_) {}
+    _sub = null;
+    _translateRunId++;
     if (mounted) setState(() => _loading = false);
   }
 
@@ -221,10 +256,10 @@ class _TranslatePageState extends State<TranslatePage> {
       fontSize: 15,
       fontHeight: 1.4,
       textColor: cs.onSurface,
-      hintTextColor: cs.onSurface.withOpacity(0.5),
+      hintTextColor: cs.onSurface.withValues(alpha: 0.5),
       cursorColor: cs.primary,
       backgroundColor: Colors.transparent,
-      selectionColor: cs.primary.withOpacity(0.3),
+      selectionColor: cs.primary.withValues(alpha: 0.3),
     );
 
     return Scaffold(
@@ -365,7 +400,7 @@ class _TranslatePageState extends State<TranslatePage> {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Icon(lucide.Lucide.ChevronDown, size: 18, color: cs.onSurface.withOpacity(0.7)),
+                          Icon(lucide.Lucide.ChevronDown, size: 18, color: cs.onSurface.withValues(alpha: 0.7)),
                         ],
                       ),
                     ),
@@ -421,7 +456,7 @@ class _Card extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.25)),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.25)),
       ),
       clipBehavior: Clip.antiAlias,
       child: child,
@@ -431,8 +466,11 @@ class _Card extends StatelessWidget {
 
 // Copy of the tactile back icon used on settings-like pages
 class _TactileIconButton extends StatefulWidget {
-  const _TactileIconButton({required this.icon, required this.color, required this.onTap, this.onLongPress, this.semanticLabel, this.size = 22, this.haptics = true});
-  final IconData icon; final Color color; final VoidCallback onTap; final VoidCallback? onLongPress; final String? semanticLabel; final double size; final bool haptics;
+  const _TactileIconButton({required this.icon, required this.color, required this.onTap, this.size = 22});
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  final double size;
   @override State<_TactileIconButton> createState() => _TactileIconButtonState();
 }
 
@@ -440,17 +478,16 @@ class _TactileIconButtonState extends State<_TactileIconButton> {
   bool _pressed = false;
   @override
   Widget build(BuildContext context) {
-    final base = widget.color; final pressColor = base.withOpacity(0.7);
-    final icon = Icon(widget.icon, size: widget.size, color: _pressed ? pressColor : base, semanticLabel: widget.semanticLabel);
+    final base = widget.color; final pressColor = base.withValues(alpha: 0.7);
+    final icon = Icon(widget.icon, size: widget.size, color: _pressed ? pressColor : base);
     return Semantics(
-      button: true, label: widget.semanticLabel,
+      button: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTapDown: (_) => setState(() => _pressed = true),
         onTapUp: (_) => setState(() => _pressed = false),
         onTapCancel: () => setState(() => _pressed = false),
-        onTap: () { if (widget.haptics) Haptics.light(); widget.onTap(); },
-        onLongPress: widget.onLongPress == null ? null : () { if (widget.haptics) Haptics.light(); widget.onLongPress!.call(); },
+        onTap: () { Haptics.light(); widget.onTap(); },
         child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6), child: icon),
       ),
     );

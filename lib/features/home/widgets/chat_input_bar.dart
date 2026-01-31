@@ -9,11 +9,9 @@ import '../../../l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../utils/file_import_helper.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import '../../../shared/responsive/breakpoints.dart';
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:io';
 import '../../../core/models/chat_input_data.dart';
 import '../../../utils/clipboard_images.dart';
@@ -27,9 +25,6 @@ import '../../../utils/app_directories.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 import '../../../desktop/desktop_context_menu.dart';
 import 'package:re_editor/re_editor.dart';
-
-// Desktop context menu actions for right-click on the input field
-enum _DesktopTextMenuAction { paste, cut, copy, selectAll }
 
 class ChatInputBarController {
   _ChatInputBarState? _state;
@@ -129,7 +124,6 @@ class ChatInputBar extends StatefulWidget {
 class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver {
   late CodeLineEditingController _controller;
   late final Map<Type, Action<Intent>> _shortcutOverrideActions;
-  bool _searchEnabled = false;
   bool _isExpanded = false; // Track expand/collapse state for input field
   final List<String> _images = <String>[]; // local file paths
   final List<DocumentAttachment> _docs = <DocumentAttachment>[]; // files to upload
@@ -138,8 +132,6 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
   static const Duration _repeatPeriod = Duration(milliseconds: 35);
   // Anchor for the responsive overflow menu on the left action bar
   final GlobalKey _leftOverflowAnchorKey = GlobalKey(debugLabel: 'left-overflow-anchor');
-  // Suppress context menu briefly after app resume to avoid flickering
-  bool _suppressContextMenu = false;
   String _lastText = '';
 
 
@@ -181,7 +173,6 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
       ),
     };
     widget.mediaController?._bind(this);
-    _searchEnabled = widget.searchEnabled;
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -198,18 +189,10 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     super.didChangeAppLifecycleState(state);
     // When app resumes from background, suppress context menu briefly to avoid flickering
     if (state == AppLifecycleState.resumed) {
-      _suppressContextMenu = true;
       // Also unfocus to reset any stuck toolbar state
       widget.focusNode?.unfocus();
-      // Re-enable context menu after a short delay
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          setState(() => _suppressContextMenu = false);
-        }
-      });
     } else if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
       // When going to background, hide any open toolbar
-      _suppressContextMenu = true;
       widget.focusNode?.unfocus();
     }
   }
@@ -217,7 +200,11 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _repeatTimers.values.forEach((t) { try { t?.cancel(); } catch (_) {} });
+    for (final t in _repeatTimers.values) {
+      try {
+        t?.cancel();
+      } catch (_) {}
+    }
     _repeatTimers.clear();
     widget.mediaController?._unbind(this);
     _controller.removeListener(_onControllerChanged);
@@ -230,9 +217,6 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
   @override
   void didUpdateWidget(covariant ChatInputBar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.searchEnabled != widget.searchEnabled) {
-      _searchEnabled = widget.searchEnabled;
-    }
     if (oldWidget.controller != widget.controller) {
       final oldController = _controller;
       oldController.removeListener(_onControllerChanged);
@@ -293,13 +277,17 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
       locale: Localizations.maybeLocaleOf(context),
       maxLines: maxLines,
     );
-    painter.layout(maxWidth: maxWidth);
+    try {
+      painter.layout(maxWidth: maxWidth);
 
-    final metrics = painter.computeLineMetrics();
-    final lineCount = metrics.isEmpty ? 1 : metrics.length;
-    final lineHeight = fontSize * fontHeight;
-    final textHeight = math.max(painter.height, lineHeight);
-    return (height: textHeight + verticalPadding, lineCount: lineCount);
+      final metrics = painter.computeLineMetrics();
+      final lineCount = metrics.isEmpty ? 1 : metrics.length;
+      final lineHeight = fontSize * fontHeight;
+      final textHeight = math.max(painter.height, lineHeight);
+      return (height: textHeight + verticalPadding, lineCount: lineCount);
+    } finally {
+      painter.dispose();
+    }
   }
 
   void _handleSend() {
@@ -334,6 +322,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
         keys.contains(LogicalKeyboardKey.metaRight);
     final ctrlOrMeta = ctrl || meta;
 
+    // TODO: Wrap Platform.is* checks for web-safety (try/catch or PlatformUtils).
     final isDesktopOs = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
     if (isDesktopOs) {
       final sendShortcut = context.read<SettingsProvider>().desktopSendShortcut;
@@ -370,17 +359,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     } catch (_) {}
   }
 
-  // Instance method for contextMenuBuilder to avoid flickering caused by recreating
-  // the callback on every build. See: https://github.com/flutter/flutter/issues/150551
-  // Note: This method is no longer used since CodeEditor has its own context menu.
-  // Kept for reference but unused.
-  Widget _buildContextMenuLegacy(BuildContext context, EditableTextState state) {
-    // TODO: Remove this dead legacy context menu method (and any leftover references) since CodeEditor provides its own context menu.
-    // This was used with TextField, not CodeEditor
-    return const SizedBox.shrink();
-  }
-
-  KeyEventResult _handleKeyEvent(FocusNode node, RawKeyEvent event) {
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     // Enhance hardware keyboard behavior
     final w = MediaQuery.sizeOf(node.context!).width;
     final isTabletOrDesktop = w >= AppBreakpoints.tablet;
@@ -391,7 +370,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     final isPasteV = key == LogicalKeyboardKey.keyV;
 
     // Paste handling for images on iOS/macOS (tablet/desktop)
-    final isDown = event is RawKeyDownEvent;
+    final isDown = event is KeyDownEvent;
     if (isDown && isPasteV) {
       final keys = HardwareKeyboard.instance.logicalKeysPressed;
       final meta = keys.contains(LogicalKeyboardKey.metaLeft) || keys.contains(LogicalKeyboardKey.metaRight);
@@ -449,7 +428,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
         final reader = await clipboard.read();
 
         // Helper: read bytes for a given file format from DataReader (ClipboardReader or item)
-        Future<Uint8List?> _readFileBytes(DataReader dataReader, FileFormat format) async {
+        Future<Uint8List?> readFileBytes(DataReader dataReader, FileFormat format) async {
           try {
             final completer = Completer<Uint8List?>();
             final progress = dataReader.getFile(
@@ -476,7 +455,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
         }
 
         // Helper: persist bytes as a file under upload directory
-        Future<String?> _saveImageBytes(String format, Uint8List bytes) async {
+        Future<String?> saveImageBytes(String format, Uint8List bytes) async {
           try {
             final dir = await AppDirectories.getUploadDirectory();
             if (!await dir.exists()) {
@@ -484,7 +463,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
             }
             final ts = DateTime.now().millisecondsSinceEpoch;
             final ext = format.toLowerCase();
-            String name = 'paste_${ts}.${ext == 'jpeg' ? 'jpg' : ext}';
+            String name = 'paste_$ts.${ext == 'jpeg' ? 'jpg' : ext}';
             String destPath = p.join(dir.path, name);
             if (await File(destPath).exists()) {
               name = 'paste_${ts}_${DateTime.now().microsecondsSinceEpoch}.${ext == 'jpeg' ? 'jpg' : ext}';
@@ -501,17 +480,17 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
         Uint8List? bytes;
         String? fmt;
         if (reader.canProvide(Formats.png)) {
-          bytes = await _readFileBytes(reader, Formats.png);
+          bytes = await readFileBytes(reader, Formats.png);
           fmt = 'png';
         }
-        bytes ??= reader.canProvide(Formats.jpeg) ? await _readFileBytes(reader, Formats.jpeg) : null;
+        bytes ??= reader.canProvide(Formats.jpeg) ? await readFileBytes(reader, Formats.jpeg) : null;
         fmt = (bytes != null && fmt == null) ? 'jpeg' : fmt;
         if (bytes == null && reader.canProvide(Formats.gif)) {
-          bytes = await _readFileBytes(reader, Formats.gif);
+          bytes = await readFileBytes(reader, Formats.gif);
           fmt = 'gif';
         }
         if (bytes == null && reader.canProvide(Formats.webp)) {
-          bytes = await _readFileBytes(reader, Formats.webp);
+          bytes = await readFileBytes(reader, Formats.webp);
           fmt = 'webp';
         }
 
@@ -519,19 +498,19 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
           // Try per-item formats
           for (final item in reader.items) {
             if (bytes == null && item.canProvide(Formats.png)) {
-              bytes = await _readFileBytes(item, Formats.png);
+              bytes = await readFileBytes(item, Formats.png);
               fmt = 'png';
             }
             if (bytes == null && item.canProvide(Formats.jpeg)) {
-              bytes = await _readFileBytes(item, Formats.jpeg);
+              bytes = await readFileBytes(item, Formats.jpeg);
               fmt = 'jpeg';
             }
             if (bytes == null && item.canProvide(Formats.gif)) {
-              bytes = await _readFileBytes(item, Formats.gif);
+              bytes = await readFileBytes(item, Formats.gif);
               fmt = 'gif';
             }
             if (bytes == null && item.canProvide(Formats.webp)) {
-              bytes = await _readFileBytes(item, Formats.webp);
+              bytes = await readFileBytes(item, Formats.webp);
               fmt = 'webp';
             }
             if (bytes != null) break;
@@ -539,7 +518,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
         }
 
         if (bytes != null && bytes.isNotEmpty && fmt != null) {
-          final savedPath = await _saveImageBytes(fmt, bytes);
+          final savedPath = await saveImageBytes(fmt, bytes);
           if (savedPath != null) {
             _addImages([savedPath]);
             return;
@@ -604,6 +583,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     final docs = <DocumentAttachment>[];
     try {
       final dir = await AppDirectories.getUploadDirectory();
+      if (!mounted) return (images: images, docs: docs);
       for (final raw in srcPaths) {
         final src = raw.startsWith('file://') ? raw.substring(7) : raw;
         final savedPath = await FileImportHelper.copyXFile(XFile(src), dir, context);
@@ -642,10 +622,10 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
           builder: () => _CompactIconButton(
             tooltip: l10n.chatInputBarSelectModelTooltip,
             icon: Lucide.Boxes,
-            child: widget.modelIcon,
             modelIcon: true,
             onTap: widget.onSelectModel,
             onLongPress: widget.onLongPressSelectModel,
+            child: widget.modelIcon,
           ),
           menu: DesktopContextMenuItem(
             icon: Lucide.Boxes,
@@ -1191,7 +1171,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
                               width: 22,
                               height: 22,
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.6),
+                                  color: Colors.black.withValues(alpha: 0.6),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.close, size: 14, color: Colors.white),
@@ -1213,13 +1193,13 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
                 child: Container(
                   decoration: BoxDecoration(
                     // Translucent background over blurred content
-                    color: isDark ? Colors.white.withOpacity(0.06) : Colors.white.withOpacity(0.07),
+                    color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white.withValues(alpha: 0.07),
                     borderRadius: BorderRadius.circular(20),
                     // Use previous gray border for better contrast on white
                     border: Border.all(
                       color: isDark
-                          ? Colors.white.withOpacity(0.10)
-                          : theme.colorScheme.outline.withOpacity(0.20),
+                          ? Colors.white.withValues(alpha: 0.10)
+                          : theme.colorScheme.outline.withValues(alpha: 0.20),
                       width: 1,
                     ),
                   ),
@@ -1340,7 +1320,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
                           return Stack(
                             children: [
                               Focus(
-                                onKey: (node, event) => _handleKeyEvent(node, event),
+                                onKeyEvent: _handleKeyEvent,
                                 child: SizedBox(
                                   height: height,
                                   child: CodeEditor(
@@ -1363,10 +1343,10 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
                                       fontFamilyFallback: fontFamilyFallback,
                                       fontHeight: fontHeight,
                                       textColor: theme.colorScheme.onSurface,
-                                      hintTextColor: theme.colorScheme.onSurface.withOpacity(0.45),
+                                    hintTextColor: theme.colorScheme.onSurface.withValues(alpha: 0.45),
                                       cursorColor: theme.colorScheme.primary,
                                       backgroundColor: Colors.transparent,
-                                      selectionColor: theme.colorScheme.primary.withOpacity(0.3),
+                                    selectionColor: theme.colorScheme.primary.withValues(alpha: 0.3),
                                     ),
                                   ),
                                 ),
@@ -1384,7 +1364,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
                                     child: Icon(
                                       _isExpanded ? Lucide.ChevronsDownUp : Lucide.ChevronsUpDown,
                                       size: 16,
-                                      color: theme.colorScheme.onSurface.withOpacity(0.45),
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
                                     ),
                                   ),
                                 ),
@@ -1524,53 +1504,6 @@ class _CompactIconButton extends StatelessWidget {
   }
 }
 
-// Keep original button for compatibility if needed elsewhere
-class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({
-    required this.icon,
-    this.onTap,
-    this.tooltip,
-    this.active = false,
-    this.child,
-    this.padding,
-  });
-
-  final IconData icon;
-  final VoidCallback? onTap;
-  final String? tooltip;
-  final bool active;
-  final Widget? child;
-  final double? padding;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final bgColor = active ? theme.colorScheme.primary.withOpacity(0.12) : Colors.transparent;
-    final fgColor = active ? theme.colorScheme.primary : (isDark ? Colors.white : Colors.black87);
-
-    final button = AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: const ShapeDecoration(shape: CircleBorder()),
-      child: Material(
-        color: bgColor,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: Padding(
-            padding: EdgeInsets.all(padding ?? 10),
-            child: child ?? Icon(icon, size: 22, color: fgColor),
-          ),
-        ),
-      ),
-    );
-
-    // Avoid Material Tooltip's ticker conflicts on some platforms; use semantics-only tooltip
-    return tooltip == null ? button : Semantics(tooltip: tooltip!, child: button);
-  }
-}
-
 // New compact send button for the integrated input bar
 class _CompactSendButton extends StatelessWidget {
   const _CompactSendButton({
@@ -1592,7 +1525,7 @@ class _CompactSendButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = (enabled || loading) ? color : (isDark ? Colors.white12 : Colors.grey.shade300.withOpacity(0.84));
+    final bg = (enabled || loading) ? color : (isDark ? Colors.white12 : Colors.grey.shade300.withValues(alpha: 0.84));
     final fg = (enabled || loading) ? (isDark ? Colors.black : Colors.white) : (isDark ? Colors.white70 : Colors.grey.shade600);
 
     return Material(
@@ -1615,57 +1548,6 @@ class _CompactSendButton extends StatelessWidget {
                     colorFilter: ColorFilter.mode(fg, BlendMode.srcIn),
                   )
                 : Icon(icon, key: const ValueKey('send'), size: 18, color: fg),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Keep original button for compatibility if needed elsewhere
-class _SendButton extends StatelessWidget {
-  const _SendButton({
-    required this.enabled,
-    required this.onSend,
-    required this.color,
-    required this.icon,
-    this.loading = false,
-    this.onStop,
-  });
-
-  final bool enabled;
-  final bool loading;
-  final VoidCallback onSend;
-  final VoidCallback? onStop;
-  final Color color;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = (enabled || loading) ? color : (isDark ? Colors.white12 : Colors.grey.shade300);
-    final fg = (enabled || loading) ? (isDark ? Colors.black : Colors.white) : (isDark ? Colors.white70 : Colors.grey.shade600);
-
-    return Material(
-      color: bg,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: loading ? onStop : (enabled ? onSend : null),
-        child: Padding(
-          padding: const EdgeInsets.all(9),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: FadeTransition(opacity: anim, child: child)),
-            child: loading
-                ? SvgPicture.asset(
-                    key: const ValueKey('stop'),
-                    'assets/icons/stop.svg',
-                    width: 22,
-                    height: 22,
-                    colorFilter: ColorFilter.mode(fg, BlendMode.srcIn),
-                  )
-                : Icon(icon, key: const ValueKey('send'), size: 22, color: fg),
           ),
         ),
       ),

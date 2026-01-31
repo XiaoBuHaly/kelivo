@@ -12,6 +12,7 @@ class MarkdownMediaSanitizer {
   );
 
   static Future<String> replaceInlineBase64Images(String markdown) async {
+    // TODO: Harden base64 image caching (limits, atomic write, IO errors, defensive regex groups).
     // // Fast path: only proceed when it's clearly a base64 data image
     // if (!(markdown.contains('data:image/') && markdown.contains(';base64,'))) {
     //   return markdown;

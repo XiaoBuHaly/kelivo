@@ -89,7 +89,7 @@ class _MessageEditSheetState extends State<_MessageEditSheet> {
           child: Column(
             children: [
               Center(
-                child: Container(width: 40, height: 4, decoration: BoxDecoration(color: cs.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(999))),
+              child: Container(width: 40, height: 4, decoration: BoxDecoration(color: cs.onSurface.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(999))),
               ),
               const SizedBox(height: 10),
               SizedBox(
@@ -102,8 +102,8 @@ class _MessageEditSheetState extends State<_MessageEditSheet> {
                       child: IosCardPress(
                         onTap: () {
                           Haptics.light();
-                          // TODO: Prevent saving/sending empty content (align with global send guards).
                           final text = _controller.text.trim();
+                          if (text.isEmpty) return;
                           Navigator.of(context).pop<MessageEditResult>(
                             MessageEditResult(content: text, shouldSend: true),
                           );
@@ -127,8 +127,8 @@ class _MessageEditSheetState extends State<_MessageEditSheet> {
                       child: IosCardPress(
                         onTap: () {
                           Haptics.light();
-                          // TODO: Prevent saving empty content (align with global send guards).
                           final text = _controller.text.trim();
+                          if (text.isEmpty) return;
                           Navigator.of(context).pop<MessageEditResult>(
                             MessageEditResult(content: text, shouldSend: false),
                           );
@@ -163,10 +163,10 @@ class _MessageEditSheetState extends State<_MessageEditSheet> {
                       fontSize: 15,
                       fontHeight: 1.5,
                       textColor: cs.onSurface,
-                      hintTextColor: cs.onSurface.withOpacity(0.5),
+                      hintTextColor: cs.onSurface.withValues(alpha: 0.5),
                       cursorColor: cs.primary,
                       backgroundColor: Colors.transparent,
-                      selectionColor: cs.primary.withOpacity(0.3),
+                      selectionColor: cs.primary.withValues(alpha: 0.3),
                     ),
                   ),
                 ),

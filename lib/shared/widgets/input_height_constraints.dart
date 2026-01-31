@@ -22,11 +22,10 @@ BoxConstraints buildInputMaxHeightConstraints({
     minHeight: minHeight,
     extraBottomPadding: extraBottomPadding,
   );
-  if (!maxHeight.isFinite || maxHeight <= 0) {
-    // TODO: Consider returning a safe minHeight constraint instead of unconstrained BoxConstraints().
-    return const BoxConstraints();
-  }
   final safeMinHeight = math.max(0.0, minHeight);
+  if (!maxHeight.isFinite || maxHeight <= 0) {
+    return BoxConstraints(minHeight: safeMinHeight, maxHeight: safeMinHeight);
+  }
   return BoxConstraints(minHeight: safeMinHeight, maxHeight: maxHeight);
 }
 

@@ -1754,6 +1754,7 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
                               backgroundColor: Colors.transparent,
                               selectionColor: cs.primary.withOpacity(0.3),
                             ),
+                            // TODO: Debounce serviceAccountJson saves; flush on blur/dispose to avoid UI jank.
                             onChanged: (value) async {
                               if (_saJsonCtrl.isComposing) return;
                               final old = sp.getProviderConfig(widget.providerKey, defaultName: widget.displayName);

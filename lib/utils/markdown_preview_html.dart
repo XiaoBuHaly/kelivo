@@ -5,7 +5,7 @@ import 'package:flutter/services.dart' show rootBundle;
 class MarkdownPreviewHtmlBuilder {
   static Future<String> buildFromMarkdown(BuildContext context, String markdown) async {
     final cs = Theme.of(context).colorScheme;
-    // TODO: Handle rootBundle.loadString failures (missing asset / read error) with a safe fallback.
+    // TODO: Handle rootBundle.loadString failures with a safe fallback template.
     final template = await rootBundle.loadString('assets/html/mark.html');
     // TODO: Confirm token semantics; BACKGROUND vs SURFACE (and ON_* variants) currently map to the same colors.
     return template
@@ -23,11 +23,15 @@ class MarkdownPreviewHtmlBuilder {
 
   static String _toCssHex(Color c) {
     // TODO: Fix _toCssHex implementation; output CSS hex as #RRGGBB or #RRGGBBAA (CSS Color Level 4).
-    final a = _toHex(_to8Bit(c.a));
     final r = _toHex(_to8Bit(c.r));
     final g = _toHex(_to8Bit(c.g));
     final b = _toHex(_to8Bit(c.b));
-    return '#$r$g$b$a';
+    final a = _to8Bit(c.a);
+    if (a == 0xFF) {
+      return '#$r$g$b';
+    }
+    final aHex = _toHex(a);
+    return '#$r$g$b$aHex';
   }
 
   static String _toHex(int value) =>
@@ -35,6 +39,7 @@ class MarkdownPreviewHtmlBuilder {
 
   static int _to8Bit(double value) =>
       (value * 255.0).round().clamp(0, 255).toInt();
+
 }
 
 extension Base64X on String {
