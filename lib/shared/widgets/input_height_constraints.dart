@@ -23,10 +23,9 @@ BoxConstraints buildInputMaxHeightConstraints({
     extraBottomPadding: extraBottomPadding,
   );
   final safeMinHeight = math.max(0.0, minHeight);
-  if (!maxHeight.isFinite || maxHeight <= 0) {
-    return BoxConstraints(minHeight: safeMinHeight, maxHeight: safeMinHeight);
-  }
-  return BoxConstraints(minHeight: safeMinHeight, maxHeight: maxHeight);
+  final safeMaxHeight = maxHeight.isFinite ? math.max(0.0, maxHeight) : safeMinHeight;
+  final effectiveMinHeight = math.min(safeMinHeight, safeMaxHeight);
+  return BoxConstraints(minHeight: effectiveMinHeight, maxHeight: safeMaxHeight);
 }
 
 /// Compute a max height for text inputs based on visible screen area.
@@ -47,15 +46,17 @@ double computeInputMaxHeight({
   }
   final size = mq.size;
   final viewInsets = mq.viewInsets;
-  final visibleHeight = math.max(0.0, size.height - viewInsets.bottom - extraBottomPadding);
+  final safeExtraBottomPadding = math.max(0.0, extraBottomPadding);
+  final visibleHeight = math.max(0.0, size.height - viewInsets.bottom - safeExtraBottomPadding);
+  if (visibleHeight <= 0) {
+    return 0;
+  }
   final cappedFraction = softCapFraction.clamp(0.1, 0.95).toDouble();
   final softCap = visibleHeight * cappedFraction;
-  final available = visibleHeight - reservedHeight;
-
-  if (available > 0) {
-    final capped = math.min(softCap, available);
-    return math.max(minCap, capped);
-  }
-  // TODO: Revisit fallback behavior when reservedHeight exceeds visible height to avoid unusably small inputs.
-  return minCap;
+  final safeReservedHeight = reservedHeight.isFinite ? math.max(0.0, reservedHeight) : 0.0;
+  final clampedReserved = math.min(safeReservedHeight, visibleHeight);
+  final available = visibleHeight - clampedReserved;
+  final capped = available > 0 ? math.min(softCap, available) : 0.0;
+  final candidate = math.max(minCap, capped);
+  return candidate.clamp(0.0, visibleHeight);
 }

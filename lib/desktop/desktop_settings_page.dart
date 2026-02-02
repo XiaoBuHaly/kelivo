@@ -1249,6 +1249,8 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
   final TextEditingController _projectIdCtrl = TextEditingController();
   final CodeLineEditingController _saJsonCtrl = CodeLineEditingController();
   final TextEditingController _apiPathCtrl = TextEditingController();
+  Timer? _saJsonSaveTimer;
+  String _lastSavedSaJson = '';
 
   void _syncCtrl(TextEditingController c, String newText) {
     final v = c.value;
@@ -1291,10 +1293,39 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
     _syncCtrl(_locationCtrl, cfg.location ?? '');
     _syncCtrl(_projectIdCtrl, cfg.projectId ?? '');
     _syncCodeCtrl(_saJsonCtrl, cfg.serviceAccountJson ?? '');
+    _lastSavedSaJson = cfg.serviceAccountJson ?? '';
+  }
+
+  Future<void> _saveSaJsonNow(SettingsProvider sp) async {
+    final text = _saJsonCtrl.text;
+    if (text == _lastSavedSaJson) return;
+    _lastSavedSaJson = text;
+    final old = sp.getProviderConfig(widget.providerKey, defaultName: widget.displayName);
+    await sp.setProviderConfig(widget.providerKey, old.copyWith(serviceAccountJson: text));
+  }
+
+  void _scheduleSaJsonSave(SettingsProvider sp) {
+    _saJsonSaveTimer?.cancel();
+    _saJsonSaveTimer = Timer(const Duration(milliseconds: 400), () {
+      _saJsonSaveTimer = null;
+      if (!mounted) return;
+      _saveSaJsonNow(sp);
+    });
+  }
+
+  void _flushSaJsonSave(SettingsProvider sp) {
+    _saJsonSaveTimer?.cancel();
+    _saJsonSaveTimer = null;
+    _saveSaJsonNow(sp);
   }
 
   @override
   void dispose() {
+    try {
+      final sp = context.read<SettingsProvider>();
+      _flushSaJsonSave(sp);
+    } catch (_) {}
+    _saJsonSaveTimer?.cancel();
     _filterCtrl.dispose();
     _searchFocus.dispose();
     _apiKeyCtrl.dispose();
@@ -1725,9 +1756,7 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
                       child: Focus(
                         onFocusChange: (has) async {
                           if (!has) {
-                            final v = _saJsonCtrl.text;
-                            final old = sp.getProviderConfig(widget.providerKey, defaultName: widget.displayName);
-                            await sp.setProviderConfig(widget.providerKey, old.copyWith(serviceAccountJson: v));
+                            await _saveSaJsonNow(sp);
                           }
                         },
                         child: Container(
@@ -1754,11 +1783,9 @@ class _DesktopProviderDetailPaneState extends State<_DesktopProviderDetailPane> 
                               backgroundColor: Colors.transparent,
                               selectionColor: cs.primary.withOpacity(0.3),
                             ),
-                            // TODO: Debounce serviceAccountJson saves; flush on blur/dispose to avoid UI jank.
                             onChanged: (value) async {
                               if (_saJsonCtrl.isComposing) return;
-                              final old = sp.getProviderConfig(widget.providerKey, defaultName: widget.displayName);
-                              await sp.setProviderConfig(widget.providerKey, old.copyWith(serviceAccountJson: _saJsonCtrl.text));
+                              _scheduleSaJsonSave(sp);
                             },
                           ),
                         ),

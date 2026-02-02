@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 import '../../../theme/design_tokens.dart';
@@ -25,6 +26,24 @@ import '../../../utils/app_directories.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 import '../../../desktop/desktop_context_menu.dart';
 import 'package:re_editor/re_editor.dart';
+
+bool _isDesktopPlatform() {
+  if (kIsWeb) return false;
+  try {
+    return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+  } catch (_) {
+    return false;
+  }
+}
+
+bool _isIOSPlatform() {
+  if (kIsWeb) return false;
+  try {
+    return Platform.isIOS;
+  } catch (_) {
+    return false;
+  }
+}
 
 class ChatInputBarController {
   _ChatInputBarState? _state;
@@ -286,6 +305,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
       final textHeight = math.max(painter.height, lineHeight);
       return (height: textHeight + verticalPadding, lineCount: lineCount);
     } finally {
+      // TODO: Verify TextPainter.dispose() availability on our minimum Flutter SDK; remove if unsupported.
       painter.dispose();
     }
   }
@@ -299,11 +319,9 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     _docs.clear();
     setState(() {});
     // Keep focus on desktop so user can continue typing
-    try {
-      if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
-        widget.focusNode?.requestFocus();
-      }
-    } catch (_) {}
+    if (_isDesktopPlatform()) {
+      widget.focusNode?.requestFocus();
+    }
   }
 
   void _insertNewlineAtCursor() {
@@ -322,8 +340,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
         keys.contains(LogicalKeyboardKey.metaRight);
     final ctrlOrMeta = ctrl || meta;
 
-    // TODO: Wrap Platform.is* checks for web-safety (try/catch or PlatformUtils).
-    final isDesktopOs = Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+    final isDesktopOs = _isDesktopPlatform();
     if (isDesktopOs) {
       final sendShortcut = context.read<SettingsProvider>().desktopSendShortcut;
       if (sendShortcut == DesktopSendShortcut.ctrlEnter) {
@@ -361,9 +378,11 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     // Enhance hardware keyboard behavior
-    final w = MediaQuery.sizeOf(node.context!).width;
+    final nodeContext = node.context;
+    if (nodeContext == null) return KeyEventResult.ignored;
+    final w = MediaQuery.sizeOf(nodeContext).width;
     final isTabletOrDesktop = w >= AppBreakpoints.tablet;
-    final isIosTablet = Platform.isIOS && isTabletOrDesktop;
+    final isIosTablet = _isIOSPlatform() && isTabletOrDesktop;
 
     final key = event.logicalKey;
     final isArrow = key == LogicalKeyboardKey.arrowLeft || key == LogicalKeyboardKey.arrowRight;
@@ -519,6 +538,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
 
         if (bytes != null && bytes.isNotEmpty && fmt != null) {
           final savedPath = await saveImageBytes(fmt, bytes);
+          if (!mounted) return;
           if (savedPath != null) {
             _addImages([savedPath]);
             return;
@@ -529,6 +549,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
         if (reader.canProvide(Formats.plainText)) {
           try {
             final String? text = await reader.readValue(Formats.plainText);
+            if (!mounted) return;
             if (text != null && text.isNotEmpty) {
               // Use CodeLineEditingController's replaceSelection for pasting
               _controller.replaceSelection(text);
@@ -544,6 +565,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     final imageTempPaths = await ClipboardImages.getImagePaths();
     if (imageTempPaths.isNotEmpty) {
       final persisted = await _persistClipboardImages(imageTempPaths);
+      if (!mounted) return;
       if (persisted.isNotEmpty) {
         _addImages(persisted);
       }
@@ -553,10 +575,11 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     // 3) Try files via platform channel on desktop (Finder/Explorer copies)
     bool handledFiles = false;
     try {
-      if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
+      if (_isDesktopPlatform()) {
         final filePaths = await ClipboardImages.getFilePaths();
         if (filePaths.isNotEmpty) {
           final saved = await _copyFilesToUpload(filePaths);
+          if (!mounted) return;
           if (saved.images.isNotEmpty) _addImages(saved.images);
           if (saved.docs.isNotEmpty) _addFiles(saved.docs);
           handledFiles = saved.images.isNotEmpty || saved.docs.isNotEmpty;
@@ -568,6 +591,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
     // 4) Last resort: paste text via Flutter Clipboard API
     try {
       final data = await Clipboard.getData(Clipboard.kTextPlain);
+      if (!mounted) return;
       final text = data?.text ?? '';
       if (text.isEmpty) return;
       // Use CodeLineEditingController's replaceSelection for pasting
@@ -1282,7 +1306,7 @@ class _ChatInputBarState extends State<ChatInputBar> with WidgetsBindingObserver
                           // Keep watching to rebuild when the setting changes.
                           // ignore: unused_local_variable
                           final enterToSendOnMobile = context.watch<SettingsProvider>().enterToSendOnMobile;
-                          final fontSize = (Platform.isWindows || Platform.isLinux || Platform.isMacOS) ? 14.0 : 15.0;
+                          final fontSize = _isDesktopPlatform() ? 14.0 : 15.0;
                           final fontHeight = 1.4;
                           final baseFont = theme.textTheme.bodyLarge;
                           final fontFamily = baseFont?.fontFamily;
@@ -1468,7 +1492,7 @@ class _CompactIconButton extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final fgColor = active ? theme.colorScheme.primary : (isDark ? Colors.white70 : Colors.black54);
-    final bool isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+    final bool isDesktop = _isDesktopPlatform();
 
     // Keep overall button size constant. For model icon with child, enlarge child slightly
     // and reduce padding so (2*padding + childSize) stays unchanged.
@@ -1583,7 +1607,7 @@ class _ChatInputShortcutsActivatorsBuilder extends CodeShortcutsActivatorsBuilde
         SingleActivator(LogicalKeyboardKey.enter),
         SingleActivator(LogicalKeyboardKey.enter, shift: true),
       ];
-      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      if (_isDesktopPlatform()) {
         activators.addAll(const [
           SingleActivator(LogicalKeyboardKey.enter, control: true),
           SingleActivator(LogicalKeyboardKey.enter, meta: true),

@@ -894,6 +894,7 @@ class HomePageController extends ChangeNotifier {
       _inputController.replaceSelection(selected.content);
       notifyListeners();
     } catch (_) {
+      // TODO: Add diagnostics (e.g., debug log + stack trace) when replaceSelection fails to avoid silent drops.
       return;
     }
   }

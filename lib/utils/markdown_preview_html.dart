@@ -3,11 +3,64 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 class MarkdownPreviewHtmlBuilder {
+  static const String _fallbackTemplate = '''
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: {{BACKGROUND_COLOR}};
+      color: {{ON_BACKGROUND_COLOR}};
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    pre {
+      margin: 0;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+  <pre id="content"></pre>
+  <script>
+    (function () {
+      var b64 = '{{MARKDOWN_BASE64}}';
+      function b64ToUtf8(value) {
+        try {
+          return decodeURIComponent(escape(atob(value)));
+        } catch (e) {
+          try { return atob(value); } catch (_) { return ''; }
+        }
+      }
+      var text = b64ToUtf8(b64);
+      var el = document.getElementById('content');
+      if (el) el.textContent = text;
+    })();
+  </script>
+</body>
+</html>
+''';
+
   static Future<String> buildFromMarkdown(BuildContext context, String markdown) async {
     final cs = Theme.of(context).colorScheme;
-    // TODO: Handle rootBundle.loadString failures with a safe fallback template.
-    final template = await rootBundle.loadString('assets/html/mark.html');
-    // TODO: Confirm token semantics; BACKGROUND vs SURFACE (and ON_* variants) currently map to the same colors.
+    String template;
+    try {
+      template = await rootBundle.loadString('assets/html/mark.html');
+    } catch (e, s) {
+      debugPrint('Failed to load markdown HTML template: $e');
+      debugPrintStack(stackTrace: s);
+      template = _fallbackTemplate;
+    }
+    // TODO: Decide token semantics (BACKGROUND vs SURFACE, and ON_* variants). If undecided, track via a GitHub issue and reference it here.
     return template
         .replaceAll('{{MARKDOWN_BASE64}}', base64Encode(utf8.encode(markdown)))
         .replaceAll('{{BACKGROUND_COLOR}}', _toCssHex(cs.surface))
@@ -22,11 +75,10 @@ class MarkdownPreviewHtmlBuilder {
   }
 
   static String _toCssHex(Color c) {
-    // TODO: Fix _toCssHex implementation; output CSS hex as #RRGGBB or #RRGGBBAA (CSS Color Level 4).
-    final r = _toHex(_to8Bit(c.r));
-    final g = _toHex(_to8Bit(c.g));
-    final b = _toHex(_to8Bit(c.b));
-    final a = _to8Bit(c.a);
+    final r = _toHex(c.red);
+    final g = _toHex(c.green);
+    final b = _toHex(c.blue);
+    final a = c.alpha;
     if (a == 0xFF) {
       return '#$r$g$b';
     }
@@ -36,9 +88,6 @@ class MarkdownPreviewHtmlBuilder {
 
   static String _toHex(int value) =>
       value.toRadixString(16).padLeft(2, '0').toUpperCase();
-
-  static int _to8Bit(double value) =>
-      (value * 255.0).round().clamp(0, 255).toInt();
 
 }
 

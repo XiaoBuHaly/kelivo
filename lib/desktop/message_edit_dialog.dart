@@ -48,7 +48,7 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
     try {
       final lines = text.codeLines;
       if (lines.isEmpty) {
-        _controller.value = const CodeLineEditingValue.empty();
+        _controller.text = text;
         return;
       }
       final lastIndex = lines.length - 1;
@@ -58,8 +58,12 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
         selection: CodeLineSelection.collapsed(index: lastIndex, offset: lastOffset),
         composing: TextRange.empty,
       );
-    } catch (_) {
-      _controller.value = const CodeLineEditingValue.empty();
+    } catch (e, s) {
+      debugPrint('Failed to sync edit dialog text: $e');
+      debugPrintStack(stackTrace: s);
+      try {
+        _controller.text = text;
+      } catch (_) {}
     }
   }
 
@@ -97,6 +101,7 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
                       TextButton.icon(
                         onPressed: () {
                           final text = _controller.text.trim();
+                          // TODO: Provide user feedback (disable button or show snackbar) when content is empty.
                           if (text.isEmpty) return;
                           Navigator.of(context).pop<MessageEditResult>(
                             MessageEditResult(content: text, shouldSend: true),
@@ -109,6 +114,7 @@ class _MessageEditDesktopDialogState extends State<_MessageEditDesktopDialog> {
                       TextButton.icon(
                         onPressed: () {
                           final text = _controller.text.trim();
+                          // TODO: Provide user feedback (disable button or show snackbar) when content is empty.
                           if (text.isEmpty) return;
                           Navigator.of(context).pop<MessageEditResult>(
                             MessageEditResult(content: text, shouldSend: false),

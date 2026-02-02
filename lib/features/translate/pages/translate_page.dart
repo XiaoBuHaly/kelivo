@@ -33,6 +33,9 @@ class _TranslatePageState extends State<TranslatePage> {
   StreamSubscription? _sub;
   bool _loading = false;
   int _translateRunId = 0;
+  Timer? _flushTimer;
+  StringBuffer? _pendingBuffer;
+  int _pendingRunId = 0;
 
   @override
   void initState() {
@@ -42,6 +45,7 @@ class _TranslatePageState extends State<TranslatePage> {
 
   @override
   void dispose() {
+    _flushTimer?.cancel();
     _sub?.cancel();
     _src.dispose();
     _dst.dispose();
@@ -80,8 +84,11 @@ class _TranslatePageState extends State<TranslatePage> {
     final lang = await showLanguageSelector(context);
     if (!mounted || lang == null) return;
     if (lang.code == '__clear__') {
-      // TODO: When clearing language, also reset _lang (and persist) to avoid UI/state mismatch.
-      setState(() => _dst.value = const CodeLineEditingValue.empty());
+      setState(() {
+        _lang = null;
+        _dst.value = const CodeLineEditingValue.empty();
+      });
+      await context.read<SettingsProvider>().resetTranslateTargetLang();
       return;
     }
     setState(() => _lang = lang);
@@ -118,16 +125,16 @@ class _TranslatePageState extends State<TranslatePage> {
 
     final runId = ++_translateRunId;
     final buffer = StringBuffer();
-    Timer? flushTimer;
+    _registerPendingBuffer(buffer, runId);
     void flushNow() {
       if (!mounted || runId != _translateRunId) return;
       _setOutputText(buffer.toString());
     }
 
     void scheduleFlush() {
-      if (flushTimer?.isActive ?? false) return;
-      flushTimer = Timer(const Duration(milliseconds: 80), () {
-        flushTimer = null;
+      if (_flushTimer?.isActive ?? false) return;
+      _flushTimer = Timer(const Duration(milliseconds: 80), () {
+        _flushTimer = null;
         flushNow();
       });
     }
@@ -155,16 +162,17 @@ class _TranslatePageState extends State<TranslatePage> {
         },
         onError: (e) {
           if (!mounted || runId != _translateRunId) return;
-          flushTimer?.cancel();
-          flushNow();
+          _flushPending();
+          _clearPendingBuffer();
           _sub = null;
           setState(() => _loading = false);
+          // TODO: Avoid showing raw exception details to users; log error details and show a generic message.
           showAppSnackBar(context, message: l10n.homePageTranslateFailed(e.toString()), type: NotificationType.error);
         },
         onDone: () {
           if (!mounted || runId != _translateRunId) return;
-          flushTimer?.cancel();
-          flushNow();
+          _flushPending();
+          _clearPendingBuffer();
           _sub = null;
           setState(() => _loading = false);
         },
@@ -174,6 +182,7 @@ class _TranslatePageState extends State<TranslatePage> {
       _sub = null;
       if (!mounted) return;
       setState(() => _loading = false);
+      // TODO: Avoid showing raw exception details to users; log error details and show a generic message.
       showAppSnackBar(context, message: l10n.homePageTranslateFailed(e.toString()), type: NotificationType.error);
     }
   }
@@ -184,6 +193,10 @@ class _TranslatePageState extends State<TranslatePage> {
       return;
     }
     final lines = text.codeLines;
+    if (lines.isEmpty) {
+      _dst.value = const CodeLineEditingValue.empty();
+      return;
+    }
     final lastIndex = lines.length - 1;
     final lastOffset = lines.last.length;
     _dst.value = CodeLineEditingValue(
@@ -194,10 +207,36 @@ class _TranslatePageState extends State<TranslatePage> {
   }
 
   Future<void> _stop() async {
+    _flushPending();
+    _clearPendingBuffer();
     try { await _sub?.cancel(); } catch (_) {}
     _sub = null;
     _translateRunId++;
     if (mounted) setState(() => _loading = false);
+  }
+
+  void _registerPendingBuffer(StringBuffer buffer, int runId) {
+    _flushTimer?.cancel();
+    _flushTimer = null;
+    _pendingBuffer = buffer;
+    _pendingRunId = runId;
+  }
+
+  void _flushPending() {
+    final buffer = _pendingBuffer;
+    if (buffer == null) return;
+    _flushTimer?.cancel();
+    _flushTimer = null;
+    if (mounted && _pendingRunId == _translateRunId) {
+      _setOutputText(buffer.toString());
+    }
+  }
+
+  void _clearPendingBuffer() {
+    _flushTimer?.cancel();
+    _flushTimer = null;
+    _pendingBuffer = null;
+    _pendingRunId = 0;
   }
 
   LanguageOption? _languageForCode(String? code) {

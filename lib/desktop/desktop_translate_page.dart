@@ -317,9 +317,12 @@ class _DesktopTranslatePageState extends State<DesktopTranslatePage> {
                                 overlay: _PaneActionButton(
                                   icon: lucide.Lucide.Eraser,
                                   label: '清空',
-                                  onTap: () {
+                                  onTap: () async {
                                     // TODO: Replace hard-coded label with AppLocalizations (i18n).
                                     // TODO: Confirm before clearing when either source or output is non-empty to prevent accidental data loss.
+                                    if (_translating || _subscription != null) {
+                                      await _stopTranslate();
+                                    }
                                     _source.value = const CodeLineEditingValue.empty();
                                     _output.value = const CodeLineEditingValue.empty();
                                   },
@@ -496,8 +499,15 @@ class _LanguageDropdownState extends State<_LanguageDropdown> {
         ),
       ]);
     });
-    Overlay.of(context).insert(_entry!);
-    setState(() => _open = true);
+    final overlay = Overlay.maybeOf(context);
+    if (overlay == null) {
+      _entry = null;
+      return;
+    }
+    overlay.insert(_entry!);
+    if (mounted) {
+      setState(() => _open = true);
+    }
   }
 
   @override
@@ -849,6 +859,7 @@ class _TranslateButtonState extends State<_TranslateButton> {
                     children: [
                       SvgPicture.asset('assets/icons/stop.svg', width: 16, height: 16, colorFilter: ColorFilter.mode(fg, BlendMode.srcIn)),
                       const SizedBox(width: 6),
+                      // TODO: Replace hard-coded label with AppLocalizations (i18n).
                       Text('终止', style: TextStyle(color: fg, fontSize: 13.5, fontWeight: FontWeight.w600)),
                     ],
                   )
@@ -858,6 +869,7 @@ class _TranslateButtonState extends State<_TranslateButton> {
                     children: [
                       Icon(lucide.Lucide.Languages, size: 16, color: fg),
                       const SizedBox(width: 6),
+                      // TODO: Replace hard-coded label with AppLocalizations (i18n).
                       Text('翻译', style: TextStyle(color: fg, fontSize: 13.5, fontWeight: FontWeight.w600)),
                     ],
                   ),

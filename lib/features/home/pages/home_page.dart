@@ -178,6 +178,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     try {
       _inputController.replaceSelection(trimmed);
     } catch (_) {
+      // TODO: Add diagnostics (and/or a graceful fallback insert) when replaceSelection fails to avoid silent drops.
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {

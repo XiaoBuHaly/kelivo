@@ -32,8 +32,12 @@ class MarkdownMediaSanitizer {
     int last = 0;
     for (final m in matches) {
       sb.write(markdown.substring(last, m.start));
-      // TODO: Avoid unsafe non-null assertions on regex capture groups; handle unexpected match shapes without throwing.
-      final dataUrl = m.group(1)!;
+      final dataUrl = m.group(1);
+      if (dataUrl == null || dataUrl.isEmpty) {
+        sb.write(markdown.substring(m.start, m.end));
+        last = m.end;
+        continue;
+      }
       String ext = AppDirectories.extFromMime(_mimeOf(dataUrl));
 
       // Extract base64 payload
