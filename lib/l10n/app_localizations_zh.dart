@@ -1279,6 +1279,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backupPageImportFromChatbox => '从 Chatbox 导入';
 
   @override
+  String get backupPageImportErrorGeneric => '导入失败，请重试。';
+
+  @override
   String get chatHistoryPageTitle => '聊天历史';
 
   @override
@@ -5224,6 +5227,9 @@ class AppLocalizationsZhHans extends AppLocalizationsZh {
   String get backupPageImportFromChatbox => '从 Chatbox 导入';
 
   @override
+  String get backupPageImportErrorGeneric => '导入失败，请重试。';
+
+  @override
   String get chatHistoryPageTitle => '聊天历史';
 
   @override
@@ -9129,6 +9135,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get backupPageImportFromChatbox => '從 Chatbox 匯入';
+
+  @override
+  String get backupPageImportErrorGeneric => '匯入失敗，請重試。';
 
   @override
   String get chatHistoryPageTitle => '聊天歷史';

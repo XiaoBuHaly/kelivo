@@ -46,12 +46,14 @@ import 'dart:io'
 import 'core/services/android_background.dart';
 import 'core/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'shared/widgets/restart_widget.dart';
 
 final RouteObserver<ModalRoute<dynamic>> routeObserver =
     RouteObserver<ModalRoute<dynamic>>();
 bool _didCheckUpdates = false; // one-time update check flag
 bool _didEnsureAssistants = false; // ensure defaults after l10n ready
 bool _didEnsureSystemFonts = false; // one-time system fonts load when needed
+// TODO: Reset one-time flags on soft restart, or move them into restartable state.
 
 Future<void> main() async {
   await runZoned(
@@ -81,9 +83,10 @@ Future<void> main() async {
       // Cache current Documents directory to fix sandboxed absolute paths on iOS
       await SandboxPathResolver.init();
       // Enable edge-to-edge to allow content under system bars (Android)
+      // TODO: Guard edge-to-edge SystemChrome call with Platform.isAndroid.
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
       // Start app (Flutter log capture is toggleable and off by default)
-      runApp(const MyApp());
+      runApp(const RestartWidget(child: MyApp()));
     },
     zoneSpecification: ZoneSpecification(
       print: (self, parent, zone, line) {
