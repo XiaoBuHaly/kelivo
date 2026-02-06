@@ -1313,6 +1313,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupPageImportFromChatbox => 'Import from Chatbox';
 
   @override
+  String get backupPageImportErrorGeneric => 'Import failed. Please try again.';
+
+  @override
   String get chatHistoryPageTitle => 'Chat History';
 
   @override
