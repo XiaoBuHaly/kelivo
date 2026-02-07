@@ -550,6 +550,7 @@
   "backupPageLocalBackup": "Local Backup",
   "backupPageImportFromCherryStudio": "Import from Cherry Studio",
   "backupPageImportFromChatbox": "Import from Chatbox",
+  "backupPageImportErrorGeneric": "Import failed. Please try again.",
   "chatHistoryPageTitle": "Chat History",
   "chatHistoryPageSearchTooltip": "Search",
   "chatHistoryPageDeleteAllTooltip": "Delete Unpinned",

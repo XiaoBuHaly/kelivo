@@ -12,7 +12,7 @@ import '../../core/providers/settings_provider.dart';
 import '../../core/services/chat/chat_service.dart';
 import '../../core/services/backup/cherry_importer.dart';
 import '../../core/services/backup/chatbox_importer.dart';
-import '../../utils/platform_utils.dart';
+import '../../shared/widgets/restart_widget.dart';
 import '../../shared/widgets/ios_switch.dart';
 import '../../shared/widgets/snackbar.dart';
 
@@ -116,11 +116,17 @@ class _DesktopBackupPaneState extends State<DesktopBackupPane> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(l10n.backupPageRestartRequired),
         content: Text(l10n.backupPageRestartContent),
+        // TODO: Use dialog builder context for Navigator.pop consistently.
         actions: [
-          TextButton(onPressed: () async {
-            Navigator.of(ctx).pop();
-            PlatformUtils.restartApp();
-          }, child: Text(l10n.backupPageOK)),
+          TextButton(
+            onPressed: () async {
+              if (!mounted) return;
+              Navigator.of(ctx).pop();
+              if (!mounted) return;
+              RestartWidget.restartApp(context);
+            },
+            child: Text(l10n.backupPageOK),
+          ),
         ],
       ),
     );
@@ -363,17 +369,31 @@ class _DesktopBackupPaneState extends State<DesktopBackupPane> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           title: Text(l10n.backupPageRestartRequired),
                           content: Text(l10n.backupPageRestartContent),
-                          actions: [TextButton(onPressed: () async {
-                            Navigator.of(context).pop();
-                            PlatformUtils.restartApp();
-                          }, child: Text(l10n.backupPageOK))],
+                          actions: [
+                            TextButton(
+                              onPressed: () async {
+                                if (!mounted) return;
+                                Navigator.of(context).pop();
+                                if (!mounted) return;
+                                RestartWidget.restartApp(context);
+                              },
+                              child: Text(l10n.backupPageOK),
+                            ),
+                          ],
                         ));
-                      } catch (e) {
+                      } catch (e, st) {
+                        if (!mounted) return;
+                        FlutterError.reportError(FlutterErrorDetails(
+                          exception: e,
+                          stack: st,
+                          library: 'backup_pane',
+                          context: ErrorDescription('Cherry Studio import failed'),
+                        ));
                         await showDialog(context: context, builder: (_) => AlertDialog(
                           backgroundColor: cs.surface,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           title: Text('Error'),
-                          content: Text(e.toString()),
+                          content: Text(l10n.backupPageImportErrorGeneric),
                           actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.backupPageOK))],
                         ));
                       }
@@ -401,17 +421,31 @@ class _DesktopBackupPaneState extends State<DesktopBackupPane> {
                             ' • Messages: ${res.messages}\n\n'
                             '${l10n.backupPageRestartContent}',
                           ),
-                          actions: [TextButton(onPressed: () async {
-                            Navigator.of(context).pop();
-                            PlatformUtils.restartApp();
-                          }, child: Text(l10n.backupPageOK))],
+                          actions: [
+                            TextButton(
+                              onPressed: () async {
+                                if (!mounted) return;
+                                Navigator.of(context).pop();
+                                if (!mounted) return;
+                                RestartWidget.restartApp(context);
+                              },
+                              child: Text(l10n.backupPageOK),
+                            ),
+                          ],
                         ));
-                      } catch (e) {
+                      } catch (e, st) {
+                        if (!mounted) return;
+                        FlutterError.reportError(FlutterErrorDetails(
+                          exception: e,
+                          stack: st,
+                          library: 'backup_pane',
+                          context: ErrorDescription('Chatbox import failed'),
+                        ));
                         await showDialog(context: context, builder: (_) => AlertDialog(
                           backgroundColor: cs.surface,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           title: Text('Error'),
-                          content: Text(e.toString()),
+                          content: Text(l10n.backupPageImportErrorGeneric),
                           actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.backupPageOK))],
                         ));
                       }
@@ -549,10 +583,17 @@ class _RemoteBackupsDialogState extends State<_RemoteBackupsDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(l10n.backupPageRestartRequired),
       content: Text(l10n.backupPageRestartContent),
-      actions: [TextButton(onPressed: () async {
-        Navigator.of(context).pop();
-        PlatformUtils.restartApp();
-      }, child: Text(l10n.backupPageOK))],
+      actions: [
+        TextButton(
+          onPressed: () async {
+            if (!mounted) return;
+            Navigator.of(context).pop();
+            if (!mounted) return;
+            RestartWidget.restartApp(context);
+          },
+          child: Text(l10n.backupPageOK),
+        ),
+      ],
     ));
   }
 

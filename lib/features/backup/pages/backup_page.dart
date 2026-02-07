@@ -17,7 +17,7 @@ import '../../../core/services/chat/chat_service.dart';
 import '../../../shared/widgets/ios_switch.dart';
 import '../../../core/services/backup/cherry_importer.dart';
 import '../../../core/services/backup/chatbox_importer.dart';
-import '../../../utils/platform_utils.dart';
+import '../../../shared/widgets/restart_widget.dart';
 
 // File size formatter (B, KB, MB, GB)
 String _fmtBytes(int bytes) {
@@ -205,6 +205,7 @@ class _BackupPageState extends State<BackupPage> {
       final res = await task();
       return res;
     } finally {
+      // TODO: Make importing overlay restart-aware to avoid extra pop on soft restart.
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
@@ -501,10 +502,17 @@ class _BackupPageState extends State<BackupPage> {
                                     builder: (dctx) => AlertDialog(
                                       title: Text(l10n.backupPageRestartRequired),
                                       content: Text(l10n.backupPageRestartContent),
-                                      actions: [TextButton(onPressed: () async {
-                                        Navigator.of(dctx).pop();
-                                        PlatformUtils.restartApp();
-                                      }, child: Text(l10n.backupPageOK))],
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () async {
+                                            if (!mounted) return;
+                                            Navigator.of(dctx).pop();
+                                            if (!mounted) return;
+                                            RestartWidget.restartApp(context);
+                                          },
+                                          child: Text(l10n.backupPageOK),
+                                        ),
+                                      ],
                                     ),
                                   );
                                 },
@@ -539,10 +547,15 @@ class _BackupPageState extends State<BackupPage> {
                               title: Text(l10n.backupPageRestartRequired),
                               content: Text(l10n.backupPageRestartContent),
                               actions: [
-                                TextButton(onPressed: () async {
-                                  Navigator.of(dctx).pop();
-                                  PlatformUtils.restartApp();
-                                }, child: Text(l10n.backupPageOK)),
+                                TextButton(
+                                  onPressed: () async {
+                                    if (!mounted) return;
+                                    Navigator.of(dctx).pop();
+                                    if (!mounted) return;
+                                    RestartWidget.restartApp(context);
+                                  },
+                                  child: Text(l10n.backupPageOK),
+                                ),
                               ],
                             ),
                           );
@@ -634,8 +647,10 @@ class _BackupPageState extends State<BackupPage> {
                             actions: [
                               TextButton(
                                 onPressed: () async {
+                                  if (!mounted) return;
                                   Navigator.of(dctx).pop();
-                                  PlatformUtils.restartApp();
+                                  if (!mounted) return;
+                                  RestartWidget.restartApp(context);
                                 },
                                 child: Text(l10n.backupPageOK),
                               ),
@@ -694,8 +709,10 @@ class _BackupPageState extends State<BackupPage> {
                             actions: [
                               TextButton(
                                 onPressed: () async {
+                                  if (!mounted) return;
                                   Navigator.of(dctx).pop();
-                                  PlatformUtils.restartApp();
+                                  if (!mounted) return;
+                                  RestartWidget.restartApp(context);
                                 },
                                 child: Text(l10n.backupPageOK),
                               ),
@@ -753,10 +770,17 @@ class _BackupPageState extends State<BackupPage> {
       builder: (dctx) => AlertDialog(
         title: Text(l10n.backupPageRestartRequired),
         content: Text(l10n.backupPageRestartContent),
-        actions: [TextButton(onPressed: () async {
-          Navigator.of(dctx).pop();
-          PlatformUtils.restartApp();
-        }, child: Text(l10n.backupPageOK))],
+        actions: [
+          TextButton(
+            onPressed: () async {
+              if (!mounted) return;
+              Navigator.of(dctx).pop();
+              if (!mounted) return;
+              RestartWidget.restartApp(context);
+            },
+            child: Text(l10n.backupPageOK),
+          ),
+        ],
       ),
     );
   }

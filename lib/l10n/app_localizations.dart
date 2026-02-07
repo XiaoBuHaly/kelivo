@@ -2555,6 +2555,12 @@ abstract class AppLocalizations {
   /// **'Import from Chatbox'**
   String get backupPageImportFromChatbox;
 
+  /// No description provided for @backupPageImportErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed. Please try again.'**
+  String get backupPageImportErrorGeneric;
+
   /// No description provided for @chatHistoryPageTitle.
   ///
   /// In en, this message translates to:

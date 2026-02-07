@@ -462,6 +462,7 @@
   "backupPageLocalBackup": "本地备份",
   "backupPageImportFromCherryStudio": "从 Cherry Studio 导入",
   "backupPageImportFromChatbox": "从 Chatbox 导入",
+  "backupPageImportErrorGeneric": "导入失败，请重试。",
   "homePageClearContext": "清空上下文",
   "homePageClearContextWithCount": "清空上下文 ({actual}/{configured})",
   "homePageDefaultAssistant": "默认助手",
