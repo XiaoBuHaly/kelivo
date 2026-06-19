@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
@@ -52,6 +53,11 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
   // We apply s^(1-k) instead of s to the list rows to gently normalize.
   // Increase k if lists still look larger at small scales; decrease if too small at large scales.
   static const double kMarkdownListScaleCompensation = 0.84;
+  static const String _horizontalRuleTokenPattern = r'(?:-{3,}|\*{3,}|_{3,}|⸻)';
+
+  @visibleForTesting
+  static const String markdownHorizontalRuleLinePattern =
+      r'^\s*' + _horizontalRuleTokenPattern + r'\s*$';
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +65,7 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final sanitizedText = _sanitizeImageLinks(text);
     final imageUrls = _extractImageUrls(sanitizedText);
-    final normalized = _preprocessFences(
+    final normalized = preprocessMarkdownForRendering(
       sanitizedText,
       enableMath: settings.enableMathRendering,
       enableDollarLatex: settings.enableDollarLatex,
@@ -481,7 +487,8 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
     }
   }
 
-  static String _preprocessFences(
+  @visibleForTesting
+  static String preprocessMarkdownForRendering(
     String input, {
     required bool enableMath,
     required bool enableDollarLatex,
@@ -606,7 +613,7 @@ class MarkdownWithCodeHighlight extends StatelessWidget {
     // If a line of only dashes follows a bold label line (e.g., "**作者:** 张三"),
     // insert a blank line so it's treated as an HR, not a Setext heading underline.
     final labelThenDash = RegExp(
-      r"^(\*\*[^\n*]+\*\*.*)\n(\s*-{3,}\s*$)",
+      r"^(\*\*[^\n*]+\*\*.*)\n(\s*" + _horizontalRuleTokenPattern + r"\s*$)",
       multiLine: true,
     );
     out = out.replaceAllMapped(labelThenDash, (m) => "${m[1]}\n\n${m[2]}");
@@ -2661,7 +2668,8 @@ class _MermaidBlockState extends State<_MermaidBlock> {
 // Full-width horizontal rule with softer color
 class SoftHrLine extends BlockMd {
   @override
-  String get expString => (r"^\s*(?:-{3,}|⸻)\s*$");
+  String get expString =>
+      MarkdownWithCodeHighlight.markdownHorizontalRuleLinePattern;
 
   @override
   Widget build(BuildContext context, String text, GptMarkdownConfig config) {
